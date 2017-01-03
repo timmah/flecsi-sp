@@ -84,6 +84,9 @@ public:
     // index space
     boundary_cells_ =
       base_t::entities<dimension, 0>().filter(is_domain_boundary);
+
+    //register_data(m, hydro, pressure, double, global, 1);
+
   } // init
 
   ///
@@ -191,6 +194,11 @@ public:
     } // switch
   } // cells
 
+  // Have the index space map from particle_array_index to the index space
+  using simple_t = topology::simple_entry<size_t>;
+  // TODO: Make this private
+  topology::index_space<simple_t, false, true, false> particles_is;  
+
 private:
 
   ///
@@ -219,8 +227,6 @@ private:
     return !is_domain_boundary(c);
   } // is_interior
 
-  //topology::index_space<
-    //particle_t, true, true, false> particles_;
 
   topology::index_space<
     topology::domain_entity<0, cell_t>, false, true, false> interior_cells_;
