@@ -3,8 +3,6 @@
  * All rights reserved.
  *~-------------------------------------------------------------------------~~*/
 
-#include <cinchtest.h>
-
 #include "flecsi-sp/pic/mesh.h"
 
 using namespace flecsi::sp;

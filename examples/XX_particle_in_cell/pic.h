@@ -17,14 +17,18 @@
 #include <flecsi/data/data.h>
 
 // Files from flecsi-sp
-#include <flecsi-sp/minimal/minimal_mesh.h>
+#include <flecsi-sp/pic/mesh.h>
+#include <flecsi-sp/pic/entity_types.h>
 
 using namespace flecsi;
 using namespace flecsi::data;
 using namespace flecsi::sp;
-using namespace flecsi::sp::minimal;
+using namespace flecsi::sp::pic;
 
-using vertex_t = minimal_mesh_t::vertex_t;
+// TODO: This should be PIC?
+using mesh_t = pic_mesh_t;
+using vertex_t = pic_vertex_t;
+using namespace flecsi::sp;
 using real_t = float;
 
 static constexpr size_t MESH_SIZE = 8;
@@ -32,25 +36,41 @@ static constexpr size_t MESH_SIZE = 8;
 ///
 // Initialize a basic mesh.
 ///
-void init_mesh(minimal_mesh_t & m) {
+void init_mesh(mesh_t & m, size_t N) {
   std::vector<vertex_t *> vs;
 
+  for(size_t k(0); k<MESH_SIZE+1; ++k) {
     for(size_t j(0); j<MESH_SIZE+1; ++j) {
       for(size_t i(0); i<MESH_SIZE+1; ++i) {
-        vs.push_back(m.make_vertex({double(i), double(j)}));
+        // TODO: Think about the order of these paramaters 
+        vs.push_back(m.make_vertex({double(i), double(j), double(k)}));
       } // for
     } // for
+  } // for
 
     size_t width = N+1;
+    size_t height = N+1;
 
-    for(size_t j(0); j<MESH_SIZE; ++j) {
-      for(size_t i(0); i<MESH_SIZE; ++i) {
-        m.make_cell({
-          vs[ i    + ( j    * width)],
-          vs[(i+1) + ( j    * width)],
-          vs[(i+1) + ((j+1) * width)],
-          vs[ i    + ((j+1) * width)]
-        });
+    for(size_t k(0); k<MESH_SIZE; ++k) {
+      for(size_t j(0); j<MESH_SIZE; ++j) {
+        for(size_t i(0); i<MESH_SIZE; ++i) {
+          // x + y*WIDTH + Z*WIDTH*DEPTH
+          m.make_cell({ // [x,y,z]
+              vs[ (i+0) + ((j+0)*width) + ((k+0)*width*height)], // [0,0,0]
+              vs[ (i+1) + ((j+0)*width) + ((k+0)*width*height)], // [1,0,0]
+              vs[ (i+1) + ((j+1)*width) + ((k+0)*width*height)], // [1,1,0]
+              vs[ (i+0) + ((j+1)*width) + ((k+0)*width*height)], // [0,1,0]
+              vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
+              vs[ (i+0) + ((j+0)*width) + ((k+1)*width*height)], // [0,0,1]
+              vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
+              vs[ (i+1) + ((j+1)*width) + ((k+1)*width*height)] // [1,1,1]
+
+              },
+              cell_type_t::unknown
+              );       
+
+
+        } // for
       } // for
     } // for
 
@@ -58,7 +78,7 @@ void init_mesh(minimal_mesh_t & m) {
 
 } // init_mesh
 
-void register_data(minimal_mesh_t& m)
+void register_pic_data(mesh_t& m)
 {
   // Need to register data for:
     // Fields
@@ -89,15 +109,16 @@ void register_data(minimal_mesh_t& m)
 }
 
 void driver(int argc, char ** argv) {
-	minimal_mesh_t m;
+	mesh_t m;
+  const size_t N = 64;
 
 	// Initialize the mesh
 	//
 	// For real programs, mesh initialization will be handled through
 	// an I/O object.
-	init_mesh(m);
+	init_mesh(m, N);
 
-  register_data(m);
+  register_pic_data(m);
 
 
 
