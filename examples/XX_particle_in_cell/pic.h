@@ -48,26 +48,26 @@ void init_mesh(mesh_t & m, size_t N) {
     } // for
   } // for
 
-    size_t width = N+1;
-    size_t height = N+1;
+    size_t width = MESH_SIZE+1;
+    size_t height = MESH_SIZE+1;
 
     for(size_t k(0); k<MESH_SIZE; ++k) {
       for(size_t j(0); j<MESH_SIZE; ++j) {
         for(size_t i(0); i<MESH_SIZE; ++i) {
           // x + y*WIDTH + Z*WIDTH*DEPTH
-          m.make_cell({ // [x,y,z]
-              vs[ (i+0) + ((j+0)*width) + ((k+0)*width*height)], // [0,0,0]
-              vs[ (i+1) + ((j+0)*width) + ((k+0)*width*height)], // [1,0,0]
-              vs[ (i+1) + ((j+1)*width) + ((k+0)*width*height)], // [1,1,0]
-              vs[ (i+0) + ((j+1)*width) + ((k+0)*width*height)], // [0,1,0]
-              vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
-              vs[ (i+0) + ((j+0)*width) + ((k+1)*width*height)], // [0,0,1]
-              vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
-              vs[ (i+1) + ((j+1)*width) + ((k+1)*width*height)] // [1,1,1]
-
+          m.make_cell(
+              { // [x,y,z]
+                vs[ (i+0) + ((j+0)*width) + ((k+0)*width*height)], // [0,0,0]
+                vs[ (i+1) + ((j+0)*width) + ((k+0)*width*height)], // [1,0,0]
+                vs[ (i+1) + ((j+1)*width) + ((k+0)*width*height)], // [1,1,0]
+                vs[ (i+0) + ((j+1)*width) + ((k+0)*width*height)], // [0,1,0]
+                vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
+                vs[ (i+0) + ((j+0)*width) + ((k+1)*width*height)], // [0,0,1]
+                vs[ (i+0) + ((j+1)*width) + ((k+1)*width*height)], // [0,1,1]
+                vs[ (i+1) + ((j+1)*width) + ((k+1)*width*height)] // [1,1,1]
               },
               cell_type_t::unknown
-              );       
+          );       
 
 
         } // for
@@ -99,11 +99,14 @@ void register_pic_data(mesh_t& m)
     // persistent, );
 
   // Register Particles 
-    // 
-  //register_data(m, sovler, particles, real_t, dense, 2, vertices);
+    // TODO: Ben how do I do this?
+    // I get that it's ~:
+    //register_data(, particles, electrons, particle_t, dense, 1, is);
+    // But I'm struggling find docs for the specifics 
   
   // Fields
-  register_data(m, sovler, fields, real_t, dense, 2, vertices);
+  register_data(m, fields, jx, real_t, dense, 1, vertices);
+  // TODO: Etc
 
 
 }
