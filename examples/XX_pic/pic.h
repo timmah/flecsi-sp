@@ -25,19 +25,62 @@
 // Namespaces
 using namespace flecsi;
 using namespace flecsi::data;
+using namespace flecsi::sp;
 
-// Types
-using dim_array_t = std::array<real_t,NDIM>;
+using mesh_t = pic_mesh_t;
+using vertex_t = pic_types_t::vertex_t;
+
+using real_t = double;
+
 
 // Constants
 #define AoS // TODO: Need other types
 #define NDIM 3 // Number of dimensions, i.e 3D 
+// This can be pulled from the PIC class itself 
+
+// Types
+using dim_array_t = std::array<real_t,NDIM>;
+
+const real_t q = 1; // TODO: Give these values
+const real_t m = 1; // TODO: Give these values
 const real_t mu = 4.0 * M_PI * 1.0e-7; // permeability of free space
 const real_t c = 299792458; // Speed of light   
 const real_t eps = 1.0 / (c * c * mu); // permittivity of free space
 
+// TODO: Read input deck
+size_t NX = 64;
+size_t NY = 64;
+size_t NZ = 64;
+size_t NPPC = 32;
+double dt = 0.1; // TODO: units?
+int num_steps = 10;
+
+real_t len_x = 1.0;
+real_t len_y = 1.0;
+real_t len_z = 1.0;
+
+real_t dx = len_x/NX;
+real_t dy = len_y/NY;
+real_t dz = len_z/NZ;
+
+using three_d_real_vector_t = std::vector< std::vector< std::vector< real_t > >>;
+// TEMP DATA
+//
+// TODO: Remove these add register them with flecsi. 
+// These are here just so it compiles 
+three_d_real_vector_t Ex;
+three_d_real_vector_t Ey;
+three_d_real_vector_t Ez;
+
+three_d_real_vector_t Bx;
+three_d_real_vector_t By;
+three_d_real_vector_t Bz;
+
+three_d_real_vector_t Jx;
+three_d_real_vector_t Jy;
+three_d_real_vector_t Jz;
 // Methods
-void init_mesh(mesh_t* m, size_t nx, size_t ny, size_t nz) {
+void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
 
   std::vector<vertex_t *> vs;
 
@@ -80,6 +123,7 @@ void init_mesh(mesh_t* m, size_t nx, size_t ny, size_t nz) {
   m.init();
 }
 
+/* // TODO: Don't do this as **
 void load_particle_properties(
             real_t** dx, 
             real_t** dy, 
@@ -98,15 +142,15 @@ void load_particle_properties(
   *uy = &particles[species][i].uy;
   *uz = &particles[species][i].uz;
 #endif
-}
+}*/
 
 dim_array_t cross_product( dim_array_t a, dim_array_t b) {
 
   dim_array_t result; 
 
-  result[0] = a[1]*b[2] - a[2]b[1];
-  result[1] = a[2]*b[0] - a[0]b[2];
-  result[2] = a[0]*b[1] - a[1]b[0];
+  result[0] = a[1]*b[2] - a[2]*b[1];
+  result[1] = a[2]*b[0] - a[0]*b[2];
+  result[2] = a[0]*b[1] - a[1]*b[0];
 
   return result; 
 
@@ -137,24 +181,33 @@ void field_solve(real_t dt) {
     // Bx = ((Ey - Ey) / dz - (Ez - Ez) / dy) * dt + Bx_-h
   
   // Note: Care needs to be taken as the sign changes from x to y to z 
-  Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
-      (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
+  
+  for (int k = 0; k < NZ; k++) {
+    for (int j = 0; j < NY; j++) {
+      for (int i = 0; i < NX; i++) {
 
-  By[k][j][i] = By[k][j][i] + dt * ( (Ez[k+1][j][i] - Ez[k][j][i]) / dx - 
-      (Ex[k][j+1][i] - Ex[k][j][i]) / dz );
+        Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
+            (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
 
-  Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy - 
-      (Ey[k][j+1][i] - Ey[k][j][i]) / dx );
+        By[k][j][i] = By[k][j][i] + dt * ( (Ez[k+1][j][i] - Ez[k][j][i]) / dx - 
+            (Ex[k][j+1][i] - Ex[k][j][i]) / dz );
 
-  // TODO: Check these indexs
-  Ex[k][j][i] = ( (1/(mu*eps)) * ( ((Bz[k][j][i] - Bz[k][j-1][i] ) / dy ) +
-        ((By[k][j][i] - By[k][j][i-1]) / dz)) + Jx[k][j][i]) * dt + Ex[k][j][i];
+        Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy - 
+            (Ey[k][j+1][i] - Ey[k][j][i]) / dx );
 
-  Ey[k][j][i] = ( (1/(mu*eps)) * ( ((Bx[k][j][i] - Bx[k][j-1][i] ) / dz ) +
-        ((Bz[k][j][i] - Bz[k][j][i-1]) / dx)) + Jy[k][j][i]) * dt + Ey[k][j][i];
+        // TODO: Check these indexs
+        Ex[k][j][i] = ( (1/(mu*eps)) * ( ((Bz[k][j][i] - Bz[k][j-1][i] ) / dy ) +
+              ((By[k][j][i] - By[k][j][i-1]) / dz)) + Jx[k][j][i]) * dt + Ex[k][j][i];
 
-  Ez[k][j][i] = ( (1/(mu*eps)) * ( ((By[k][j][i] - By[k][j-1][i] ) / dx ) +
-        ((Bx[k][j][i] - Bx[k][j][i-1]) / dy)) + Jz[k][j][i]) * dt + Ez[k][j][i];
+        Ey[k][j][i] = ( (1/(mu*eps)) * ( ((Bx[k][j][i] - Bx[k][j-1][i] ) / dz ) +
+              ((Bz[k][j][i] - Bz[k][j][i-1]) / dx)) + Jy[k][j][i]) * dt + Ey[k][j][i];
+
+        Ez[k][j][i] = ( (1/(mu*eps)) * ( ((By[k][j][i] - By[k][j-1][i] ) / dx ) +
+              ((Bx[k][j][i] - Bx[k][j][i-1]) / dy)) + Jz[k][j][i]) * dt + Ez[k][j][i];
+
+      }
+    }
+  }
 
 
 }
@@ -171,9 +224,11 @@ void particle_move() {
   // KE = m/2 * v_old * v_new 
   //
   
+  /* TODO: Implement this once we have a particle store
   dx += ux*dt;
   dy += uy*dt;
   dz += uz*dt;
+  */
 }
 
 void update_velocity(real_t dt) {
@@ -194,6 +249,16 @@ void update_velocity(real_t dt) {
   // |v-|^2 = |v+|^2
   // s = 2t / (1+t^2) 
   // t = qB /m * delta_t / 2 
+  //
+  // TODO: move these data declarations
+  dim_array_t t;
+  dim_array_t E;
+  dim_array_t B;
+  dim_array_t v;
+  dim_array_t s;
+  dim_array_t v_plus;
+  dim_array_t v_minus;
+  dim_array_t v_prime;
  
   real_t t_squared = 0.0;
 
@@ -202,7 +267,6 @@ void update_velocity(real_t dt) {
   {
     t[i] = q/m * B[i] * 0.5 * dt;
     t_squared += t[i]*t[i];
-    t_sq
   }
 
   // Calculate s
@@ -218,14 +282,14 @@ void update_velocity(real_t dt) {
   }
 
   // Calculate v'
-  dim_array_t vt_cross_product = cross_product( v_minus[i], t);
+  dim_array_t vt_cross_product = cross_product( v_minus, t);
   for (size_t i = 0; i < NDIM; i++) 
   {
     v_prime[i] = v_minus[i] + vt_cross_product[i];
   }
 
   // Calculate v+
-  dim_array_t vs_cross_product = cross_product( v_prime[i], s);
+  dim_array_t vs_cross_product = cross_product( v_prime, s);
   for (size_t i = 0; i < NDIM; i++) 
   {
     v_plus[i] = v_minus[i] + vs_cross_product[i];
@@ -246,6 +310,9 @@ void update_velocity(real_t dt) {
 void particle_push() {
 
 }
+
+void fields_half() {} 
+void fields_final() {} 
 
 // Test main PIC kernel implementation
 void kernel() {
@@ -303,12 +370,6 @@ void driver(int argc, char ** argv) {
   // Declare mesh
   mesh_t m;
 
-  // TODO: Read input deck
-  size_t NX = 64;
-  size_t NY = 64;
-  size_t NZ = 64;
-  size_t NPPC = 32;
-  double dt = 0.1; // TODO: units?
 
   // Init mesh
   init_mesh(m, NX, NY, NZ);
@@ -317,8 +378,8 @@ void driver(int argc, char ** argv) {
   init_simulation();
 
   // Register data
-  register_data(m, solver, unknowns, double, dense, 2, vertices);
-  register_data(m, solver, p, double, sparse, 2, vertices, 3);
+  //register_data(m, solver, unknowns, double, dense, 2, vertices);
+  //register_data(m, solver, p, double, sparse, 2, vertices, 3);
 
 
   particle_initialization();
