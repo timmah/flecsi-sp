@@ -137,15 +137,25 @@ void field_solve(real_t dt) {
     // Bx = ((Ey - Ey) / dz - (Ez - Ez) / dy) * dt + Bx_-h
   
   // Note: Care needs to be taken as the sign changes from x to y to z 
- 
-  Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - ( Ez[k][j+1][i] - Ez[k][j][i]) / dy )
+  Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
+      (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
 
-  // TODO: Implement these
-  By[k][j][i] = By[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - ( Ez[k][j+1][i] - Ez[k][j][i]) / dy )
-  Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - ( Ez[k][j+1][i] - Ez[k][j][i]) / dy )
+  By[k][j][i] = By[k][j][i] + dt * ( (Ez[k+1][j][i] - Ez[k][j][i]) / dx - 
+      (Ex[k][j+1][i] - Ex[k][j][i]) / dz );
 
+  Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy - 
+      (Ey[k][j+1][i] - Ey[k][j][i]) / dx );
 
-  
+  // TODO: Check these indexs
+  Ex[k][j][i] = ( (1/(mu*eps)) * ( ((Bz[k][j][i] - Bz[k][j-1][i] ) / dy ) +
+        ((By[k][j][i] - By[k][j][i-1]) / dz)) + Jx[k][j][i]) * dt + Ex[k][j][i];
+
+  Ey[k][j][i] = ( (1/(mu*eps)) * ( ((Bx[k][j][i] - Bx[k][j-1][i] ) / dz ) +
+        ((Bz[k][j][i] - Bz[k][j][i-1]) / dx)) + Jy[k][j][i]) * dt + Ey[k][j][i];
+
+  Ez[k][j][i] = ( (1/(mu*eps)) * ( ((By[k][j][i] - By[k][j-1][i] ) / dx ) +
+        ((Bx[k][j][i] - Bx[k][j][i-1]) / dy)) + Jz[k][j][i]) * dt + Ez[k][j][i];
+
 
 }
 void particle_move() { 

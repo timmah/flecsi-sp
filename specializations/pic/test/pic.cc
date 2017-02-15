@@ -3,7 +3,7 @@
  * All rights reserved.
  *~-------------------------------------------------------------------------~~*/
 
-//#include <cinchtest.h>
+#include <cinchtest.h>
 #include <vector>
 
 #include <flecsi/topology/mesh_topology.h>
@@ -107,7 +107,8 @@ TEST_F(pic_t, sanity) {
     // TODO: How do I register data to a index space?
     // This isn't (currently) supported, index into the particle array using
     // the index space directly
-    register_data(m, particles, electrons, particle_t, global, particles_is); 
+    
+    //register_data(m, particles, electrons, particle_t, global, particles_is); 
 
 
 
