@@ -16,7 +16,7 @@
 #include <flecsi/data/data.h>
 
 // Files from flecsi-sp
-#include <flecsi-sp/minimal/minimal_mesh.h>
+#include <flecsi-sp/minimal/mesh.h>
 
 #include "../common/init_mesh.h"
 
