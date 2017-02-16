@@ -26,6 +26,7 @@
 using namespace flecsi;
 using namespace flecsi::data;
 using namespace flecsi::sp;
+using namespace flecsi::sp::pic;
 
 using mesh_t = pic_mesh_t;
 using vertex_t = pic_types_t::vertex_t;
@@ -63,6 +64,7 @@ real_t dx = len_x/NX;
 real_t dy = len_y/NY;
 real_t dz = len_z/NZ;
 
+// TODO:" Most of the uses for this can really be 1d attached to cells/vertexs
 using three_d_real_vector_t = std::vector< std::vector< std::vector< real_t > >>;
 // TEMP DATA
 //
@@ -87,9 +89,7 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
   for(size_t k(0); k<nz+1; ++k) {
     for(size_t j(0); j<ny+1; ++j) {
       for(size_t i(0); i<nx+1; ++i) {
-
         vs.push_back(m.make_vertex({double(i), double(j), double(k)}));
-
       } // for
     } // for
   } // for
@@ -378,9 +378,20 @@ void driver(int argc, char ** argv) {
   init_simulation();
 
   // Register data
-  //register_data(m, solver, unknowns, double, dense, 2, vertices);
-  //register_data(m, solver, p, double, sparse, 2, vertices, 3);
+  //register_data(m, solver, unknowns, double, dense, 1, m.vertices);
+  
+  //register_data(m, hydro, materials, double, dense, 1, m.cells);
+  register_data(m, solver, unknowns, double, dense, 1, vertices);        
 
+  //register_data(m, solver, p, double, sparse, 2, vertices, 3);
+  
+  // Experiment with data
+  auto u = get_accessor(m, solver, unknowns, double, dense, 0);
+
+  for(auto v: m.vertices()) 
+  {
+    std::cout << u[v] << std::endl;
+  } // for
 
   particle_initialization();
 
@@ -390,7 +401,7 @@ void driver(int argc, char ** argv) {
   // Perform main loop
   for (size_t i = 0; i < num_steps; i++) 
   {
-    kernel();
+    //kernel();
   }
 
   /*
