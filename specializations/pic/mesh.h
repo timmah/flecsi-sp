@@ -123,7 +123,9 @@ public:
   size_t
   indices(
     size_t index_space_id
-  ) //override
+  ) 
+  const 
+  override
   {
     switch(index_space_id) {
       case pic::vertices:

@@ -386,12 +386,14 @@ void driver(int argc, char ** argv) {
   //register_data(m, solver, p, double, sparse, 2, vertices, 3);
   
   // Experiment with data
-  auto u = get_accessor(m, solver, unknowns, double, dense, 0);
+  auto u = get_accessor(m, solver, unknowns, double, dense, 0);                    
+                                                                                     
+  std::cout << "top ent " << m.topology::mesh_topology_t<pic_types_t>::num_entities(0) << std::endl;
+  for(auto v: m.vertices()) {                                                      
+    std::cout << v->coordinates() << std::endl;                                    
+    u[v] = 0.0;                                                                    
+  } // for                  
 
-  for(auto v: m.vertices()) 
-  {
-    std::cout << u[v] << std::endl;
-  } // for
 
   particle_initialization();
 
