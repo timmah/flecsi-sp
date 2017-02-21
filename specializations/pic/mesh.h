@@ -123,8 +123,8 @@ public:
   size_t
   indices(
     size_t index_space_id
-  ) 
-  const 
+  )
+  const
   override
   {
     switch(index_space_id) {
@@ -154,11 +154,30 @@ public:
   >
   auto
   vertices(
-    E * e
+    E* e
   )
   {
     return base_t::entities<0, 0>(e);
   } // vertices
+
+  template<class E>
+    auto vertices(topology::domain_entity<0, E> & e){
+      return vertices(e.entity());
+    }
+  /*
+  template<
+    typename E
+  >
+  auto
+  vertices(
+    E& e // TODO: Check with Ben if I should have needed to add this reference version
+  )
+  {
+    return base_t::entities<0, 0>(e);
+  } // vertices
+  */
+ 
+
 
   ///
   //
@@ -181,6 +200,14 @@ public:
     return base_t::entities<dimension, 0>(e);
   } // cells
 
+  // this is needed for nested iteration (i.e loop over cells then the
+  // associated vertices)
+  template<class E>
+  auto cells(topology::domain_entity<0, E> & e){
+    return cells(e.entity());
+  }
+
+  /*
   auto
   cells(
     size_t is
@@ -195,6 +222,20 @@ public:
         assert(false && "unknown index space");
     } // switch
   } // cells
+
+  */
+  /*
+  auto
+  cells(
+    flecsi::topology::domain_entity<0ul, flecsi::sp::pic_vertex_t>& e
+  )
+  {
+    return base_t::entities<dimension, 0>(e);
+  } // cells
+  */
+
+  
+  
 
   // Have the index space map from particle_array_index to the index space
   using simple_t = topology::simple_entry<size_t>;
@@ -228,7 +269,6 @@ private:
   {
     return !is_domain_boundary(c);
   } // is_interior
-
 
   topology::index_space<
     topology::domain_entity<0, cell_t>, false, true, false> interior_cells_;

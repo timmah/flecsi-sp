@@ -15,6 +15,7 @@
 
 // Includes 
 #include <iostream>
+#include <iomanip>
 
 // Files from flecsi
 #include <flecsi/data/data.h>
@@ -378,22 +379,33 @@ void driver(int argc, char ** argv) {
   init_simulation();
 
   // Register data
-  //register_data(m, solver, unknowns, double, dense, 1, m.vertices);
-  
-  //register_data(m, hydro, materials, double, dense, 1, m.cells);
-  register_data(m, solver, unknowns, double, dense, 1, vertices);        
+  register_data(m, fields, jx, double, dense, 1, vertices);        
+  register_data(m, fields, jy, double, dense, 1, vertices);        
+  register_data(m, fields, jz, double, dense, 1, vertices);        
 
   //register_data(m, solver, p, double, sparse, 2, vertices, 3);
   
   // Experiment with data
-  auto u = get_accessor(m, solver, unknowns, double, dense, 0);                    
+  auto u = get_accessor(m, fields, jx, double, dense, 0);                    
                                                                                      
-  std::cout << "top ent " << m.topology::mesh_topology_t<pic_types_t>::num_entities(0) << std::endl;
-  for(auto v: m.vertices()) {                                                      
-    std::cout << v->coordinates() << std::endl;                                    
-    u[v] = 0.0;                                                                    
-  } // for                  
+  // Example of how to iterate vertices from cells
+  for ( auto c : m.cells() )
+  {
+    std::cout << "Volume " << c->volume() << std::endl;
+    for ( auto v : m.vertices(c) ) {
+      std::cout << v->coordinates() << std::endl;                                    
+    }
+  }
 
+  // Example of how to iterate cells from verticies
+  for ( auto v : m.vertices() )
+  {
+    std::cout << "Volume " << v->coordinates() << std::endl;
+    //std::cout << v << std::endl;
+    for ( auto c : m.cells(v) ) {
+      std::cout << c->volume() << std::endl;                                    
+    }
+  }
 
   particle_initialization();
 
@@ -424,6 +436,21 @@ void driver(int argc, char ** argv) {
     u[v] = 0.0;
   } // for
   */
+
+#ifdef VIS
+  // I stole this from flecsale...and need to talk to Marc about how it works 
+  
+  std::string prefix = "mesh_out";
+  std::string postfix = "vtk";
+
+  int step = 0;
+  std::stringstream ss;
+  ss << prefix;
+  ss << std::setw( 7 ) << std::setfill( '0' ) << step++;
+  ss << "."+postfix;
+
+  flecsi::io::write_mesh( ss.str(), m );
+#endif
 
 } // driver
 
