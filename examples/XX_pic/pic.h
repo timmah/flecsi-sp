@@ -3,22 +3,32 @@
  * All rights reserved
  *~--------------------------------------------------------------------------~*/
 
+///////////////////////////// TODO //////////////////////////////////
+//
+// Particle shape?
+// boundary style things? periodic? 
+// data layout? method to load particle properties? Not married to AoS?
+// replace all locals (eg nx) with assignment _globals (eg NX_global)
+
+///////////////////////////// END TODO //////////////////////////////////
+
 #ifndef driver_h
 #define driver_h
-
-/// TODO ////
-//
-// boundary style things? periodic? 
-// data layout? method to load particle properties?
-//
-/// TODO /// 
 
 // Includes 
 #include <iostream>
 #include <iomanip>
 
+#define ENABLE_DEBUG 1 
+#if ENABLE_DEBUG                                                                
+#define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t " 
+#else                                                                              
+#define debug_out while(0) std::cout                                               
+#endif /* ENABLE_DEBUG */     
+
 // Files from flecsi
 #include <flecsi/data/data.h>
+#include <flecsi/io/io.h>
 
 // Files from flecsi-sp
 #include <flecsi-sp/pic/mesh.h>
@@ -50,38 +60,30 @@ const real_t c = 299792458; // Speed of light
 const real_t eps = 1.0 / (c * c * mu); // permittivity of free space
 
 // TODO: Read input deck
-size_t NX = 64;
-size_t NY = 64;
-size_t NZ = 64;
+size_t NX_global = 64;
+size_t NY_global = 64;
+size_t NZ_global = 64;
+
+size_t nx = NX_global;
+size_t ny = NY_global;
+size_t nz = NZ_global;
+
 size_t NPPC = 32;
 double dt = 0.1; // TODO: units?
 int num_steps = 10;
 
-real_t len_x = 1.0;
-real_t len_y = 1.0;
-real_t len_z = 1.0;
+real_t len_x_global = 1.0;
+real_t len_y_global = 1.0;
+real_t len_z_global = 1.0;
 
-real_t dx = len_x/NX;
-real_t dy = len_y/NY;
-real_t dz = len_z/NZ;
+real_t len_x = len_x_global;
+real_t len_y = len_y_global;
+real_t len_z = len_z_global;
 
-// TODO:" Most of the uses for this can really be 1d attached to cells/vertexs
-using three_d_real_vector_t = std::vector< std::vector< std::vector< real_t > >>;
-// TEMP DATA
-//
-// TODO: Remove these add register them with flecsi. 
-// These are here just so it compiles 
-three_d_real_vector_t Ex;
-three_d_real_vector_t Ey;
-three_d_real_vector_t Ez;
+real_t dx = len_x/nx;
+real_t dy = len_y/ny;
+real_t dz = len_z/nz;
 
-three_d_real_vector_t Bx;
-three_d_real_vector_t By;
-three_d_real_vector_t Bz;
-
-three_d_real_vector_t Jx;
-three_d_real_vector_t Jy;
-three_d_real_vector_t Jz;
 // Methods
 void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
 
@@ -157,10 +159,84 @@ dim_array_t cross_product( dim_array_t a, dim_array_t b) {
 
 }
 
-void init_simulation() {
+void field_initialization(mesh_t& m)
+{
+  // Experiment with data
+  auto jx = get_accessor(m, fields, jx, double, dense, 0);                    
+                                                                                     
+  // Example of how to iterate vertices from cells
+  for ( auto c : m.cells() )
+  {
+    //std::cout << "Volume " << c->volume() << std::endl;
+    for ( auto v : m.vertices(c) ) {
+      //std::cout << v->coordinates() << std::endl;                                    
+      jx[v] = 1.0;
+    }
+  }
 }
 
-void field_solve(real_t dt) {
+
+void insert_particle(mesh_t& m, real_t x, real_t y, real_t z)
+{
+  // TODO: Implement this
+}
+
+real_t random_real(real_t min, real_t max)
+{
+  float r = (float)rand() / (float)RAND_MAX;
+  return min + r * (max - min);
+}
+
+void particle_initialization(mesh_t& m) {
+
+  //srand((unsigned)time(0)); 
+
+  for ( auto v : m.vertices() ) {
+    auto coord = v->coordinates();
+
+    real_t x_min = coord[0] * dx;
+    real_t x_max = x_min + dx;
+
+    real_t y_min = coord[1] * dy;
+    real_t y_max = y_min + dy;
+
+    real_t z_min = coord[2] * dz;
+    real_t z_max = z_min + dz;
+    for (size_t i = 0; i < NPPC; i++)
+    {
+      real_t x = random_real( x_min, x_max );
+      real_t y = random_real( y_min, y_max );
+      real_t z = random_real( z_min, z_max );
+
+      insert_particle(m, x, y, z);
+    }
+  }
+  logger << "Done particle init" << std::endl;
+
+}
+
+
+void init_simulation(mesh_t& m) {
+  // TODO: Much of this can be pushed into the specialization 
+  
+  // Register data
+  register_data(m, fields, jx, double, dense, 1, vertices);        
+  register_data(m, fields, jy, double, dense, 1, vertices);        
+  register_data(m, fields, jz, double, dense, 1, vertices);        
+
+  register_data(m, fields, ex, double, dense, 1, vertices);        
+  register_data(m, fields, ey, double, dense, 1, vertices);        
+  register_data(m, fields, ez, double, dense, 1, vertices);        
+
+  register_data(m, fields, bx, double, dense, 1, vertices);        
+  register_data(m, fields, by, double, dense, 1, vertices);        
+  register_data(m, fields, bz, double, dense, 1, vertices);        
+
+  field_initialization(m);
+  particle_initialization(m);
+}
+
+void field_solve(mesh_t& m, real_t dt) {
   
   // TODO: Double check these are the right values for EM (not ES)
 
@@ -183,10 +259,26 @@ void field_solve(real_t dt) {
   
   // Note: Care needs to be taken as the sign changes from x to y to z 
   
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
+  auto By = get_accessor(m, fields, by, double, dense, 0);                    
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);                    
+
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);                    
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);                    
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);                    
+
+  auto Jx = get_accessor(m, fields, jx, double, dense, 0);                    
+  auto Jy = get_accessor(m, fields, jy, double, dense, 0);                    
+  auto Jz = get_accessor(m, fields, jz, double, dense, 0);                    
+
+  /* Convert this from 3d loop to flecsi loop
   for (int k = 0; k < NZ; k++) {
     for (int j = 0; j < NY; j++) {
       for (int i = 0; i < NX; i++) {
+  */
 
+  for ( auto v : m.vertices() ) {
+    /* Convert this from 3d loop to flecsi loop
         Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
             (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
 
@@ -205,11 +297,39 @@ void field_solve(real_t dt) {
 
         Ez[k][j][i] = ( (1/(mu*eps)) * ( ((By[k][j][i] - By[k][j-1][i] ) / dx ) +
               ((Bx[k][j][i] - Bx[k][j][i-1]) / dy)) + Jz[k][j][i]) * dt + Ez[k][j][i];
+    */
 
-      }
-    }
+    // TODO: Ask Ben how best to deal with stenciling like this
+    auto width = ny;
+    auto depth = nz;
+    auto i = (1);
+    auto j = (1*width);
+    auto k = (1*width*depth);
+
+    auto v_pk = v+k;
+    auto v_pj = v+j;
+    auto v_mj = v-j;
+    auto v_mi = v-i;
+
+    Bx[v] = Bx[v] + dt * ( (Ey[v_pk] - Ey[v]) / dz - 
+        (Ez[v_pj] - Ez[v]) / dy );
+
+    By[v] = By[v] + dt * ( (Ez[v_pk] - Ez[v]) / dx - 
+        (Ex[v_pj] - Ex[v]) / dz );
+
+    Bz[v] = Bz[v] + dt * ( (Ex[v_pk] - Ex[v]) / dy - 
+        (Ey[v_pj] - Ey[v]) / dx );
+
+    // TODO: Check these indexs
+    Ex[v] = ( (1/(mu*eps)) * ( ((Bz[v] - Bz[v_mj] ) / dy ) +
+          ((By[v] - By[v_mi]) / dz)) + Jx[v]) * dt + Ex[v];
+
+    Ey[v] = ( (1/(mu*eps)) * ( ((Bx[v] - Bx[v_mj] ) / dz ) +
+          ((Bz[v] - Bz[v_mi]) / dx)) + Jy[v]) * dt + Ey[v];
+
+    Ez[v] = ( (1/(mu*eps)) * ( ((By[v] - By[v_mj] ) / dx ) +
+          ((Bx[v] - Bx[v_mi]) / dy)) + Jz[v]) * dt + Ez[v];
   }
-
 
 }
 void particle_move() { 
@@ -260,6 +380,9 @@ void update_velocity(real_t dt) {
   dim_array_t v_plus;
   dim_array_t v_minus;
   dim_array_t v_prime;
+
+  // TODO: give E/B a value 
+  // TODO: make this do multiple particles..
  
   real_t t_squared = 0.0;
 
@@ -359,44 +482,39 @@ void kernel() {
 
 }
 
-
-void particle_initialization() {
-
+void load_default_input_deck()
+{
+  logger << "Importing Default Input Deck" << std::endl;
 }
 
-
+void read_input_deck() 
+{
+  // TODO: Empty.. for now...
+  // At some point this will read a JSON file (using a lib)
+}
 
 void driver(int argc, char ** argv) {
 
   // Declare mesh
   mesh_t m;
 
+  bool load_input_deck = false;
 
-  // Init mesh
-  init_mesh(m, NX, NY, NZ);
-
-  // Init Simulation (generic particles etc)
-  init_simulation();
-
-  // Register data
-  register_data(m, fields, jx, double, dense, 1, vertices);        
-  register_data(m, fields, jy, double, dense, 1, vertices);        
-  register_data(m, fields, jz, double, dense, 1, vertices);        
-
-  //register_data(m, solver, p, double, sparse, 2, vertices, 3);
-  
-  // Experiment with data
-  auto u = get_accessor(m, fields, jx, double, dense, 0);                    
-                                                                                     
-  // Example of how to iterate vertices from cells
-  for ( auto c : m.cells() )
+  if (load_input_deck) {
+    read_input_deck();
+  }
+  else 
   {
-    std::cout << "Volume " << c->volume() << std::endl;
-    for ( auto v : m.vertices(c) ) {
-      std::cout << v->coordinates() << std::endl;                                    
-    }
+    load_default_input_deck();
   }
 
+  // Init mesh
+  init_mesh(m, NX_global, NY_global, NZ_global);
+
+  // Init Simulation (generic particles etc)
+  init_simulation(m);
+
+  /*
   // Example of how to iterate cells from verticies
   for ( auto v : m.vertices() )
   {
@@ -406,17 +524,19 @@ void driver(int argc, char ** argv) {
       std::cout << c->volume() << std::endl;                                    
     }
   }
-
-  particle_initialization();
+  */
 
   // Do an initial velocity move of dt/2 backwards to enable the leap frogging
   update_velocity(-1 * (dt/2));
 
   // Perform main loop
+  logger << "Starting Main Push" << std::endl;
   for (size_t i = 0; i < num_steps; i++) 
   {
-    //kernel();
+    logger << "-> Start Step " << i << std::endl;
+    kernel();
   }
+  logger << "Finished Main Push" << std::endl;
 
   /*
   auto ap = get_mutator(m, solver, p, double, sparse, 0, 3);
@@ -437,11 +557,12 @@ void driver(int argc, char ** argv) {
   } // for
   */
 
-#ifdef VIS
+#define VIS 0
+#if VIS
   // I stole this from flecsale...and need to talk to Marc about how it works 
   
   std::string prefix = "mesh_out";
-  std::string postfix = "vtk";
+  std::string postfix = "dat";
 
   int step = 0;
   std::stringstream ss;
