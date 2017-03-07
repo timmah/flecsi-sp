@@ -9,6 +9,8 @@
 // boundary style things? periodic? 
 // data layout? method to load particle properties? Not married to AoS?
 // replace all locals (eg nx) with assignment _globals (eg NX_global)
+// Add support for multiple species
+// Add an automate-able validation 
 
 ///////////////////////////// END TODO //////////////////////////////////
 
@@ -32,6 +34,7 @@
 
 // Files from flecsi-sp
 #include <flecsi-sp/pic/mesh.h>
+#include <flecsi-sp/pic/entity_types.h>
 
 // Namespaces
 using namespace flecsi;
@@ -39,6 +42,7 @@ using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
+using particle_list_t = particle_list_<float>;
 using mesh_t = pic_mesh_t;
 using vertex_t = pic_types_t::vertex_t;
 
@@ -52,6 +56,8 @@ using real_t = double;
 
 // Types
 using dim_array_t = std::array<real_t,NDIM>;
+
+int num_particles = 0; 
 
 const real_t q = 1; // TODO: Give these values
 const real_t m = 1; // TODO: Give these values
@@ -126,26 +132,6 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
   m.init();
 }
 
-/* // TODO: Don't do this as **
-void load_particle_properties(
-            real_t** dx, 
-            real_t** dy, 
-            real_t** dz, 
-            real_t** ux, 
-            real_t** uy, 
-            real_t** uz
-            )
-{
-#ifdef AoS 
-  *dx = &particles[species][i].dx;
-  *dy = &particles[species][i].dx;
-  *dz = &particles[species][i].dz;
-
-  *ux = &particles[species][i].ux;
-  *uy = &particles[species][i].uy;
-  *uz = &particles[species][i].uz;
-#endif
-}*/
 
 dim_array_t cross_product( dim_array_t a, dim_array_t b) {
 
@@ -179,6 +165,8 @@ void field_initialization(mesh_t& m)
 void insert_particle(mesh_t& m, real_t x, real_t y, real_t z)
 {
   // TODO: Implement this
+  logger << "Insert particles at " << x << ", " << y << "," << z << std::endl;
+  num_particles++;
 }
 
 real_t random_real(real_t min, real_t max)
@@ -231,6 +219,8 @@ void init_simulation(mesh_t& m) {
   register_data(m, fields, bx, double, dense, 1, vertices);        
   register_data(m, fields, by, double, dense, 1, vertices);        
   register_data(m, fields, bz, double, dense, 1, vertices);        
+
+  register_data(m, particles, p, particle_list_t, dense, 1, cells);        
 
   field_initialization(m);
   particle_initialization(m);
@@ -336,97 +326,124 @@ void particle_move() {
 
   // mult by delta_t and divide by delta_x 
   // Swap in F/m = qE/m 
-    // v = v + (F * delta_t) / m 
-    // x = x + v * delta_t
-    
+  // v = v + (F * delta_t) / m 
+  // x = x + v * delta_t
+
   // Gives:
-    // (v*delta_t)/delta_x = (v*delta_t / delta_x) + (q/m)*((E * delta_t^2) / delta_x)
+  // (v*delta_t)/delta_x = (v*delta_t / delta_x) + (q/m)*((E * delta_t^2) / delta_x)
 
   // KE = m/2 * v_old * v_new 
   //
-  
+
   /* TODO: Implement this once we have a particle store
-  dx += ux*dt;
-  dy += uy*dt;
-  dz += uz*dt;
-  */
+     dx += ux*dt;
+     dy += uy*dt;
+     dz += uz*dt;
+     */
 }
 
-void update_velocity(real_t dt) {
-  // Use the Boris method to update the velocity and rotate (P62 in Birdsall) 
-  // Example of this can also be found here 
-  // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java 
- 
-  // Equations:
-  
-  // v_old = v- - qE/m * delta_t / 2
+void update_velocities(mesh_t& mesh, real_t dt) {
+
+  auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
+  auto By = get_accessor(mesh, fields, by, double, dense, 0);                    
+  auto Bz = get_accessor(mesh, fields, bz, double, dense, 0);                    
+
+  auto Ex = get_accessor(mesh, fields, ex, double, dense, 0);                    
+  auto Ey = get_accessor(mesh, fields, ey, double, dense, 0);                    
+  auto Ez = get_accessor(mesh, fields, ez, double, dense, 0);                    
+
+  for (size_t i = 0; i < num_particles; i++)
+  {
+
+    int cell_index[3];
+    cell_index[0] = 1; // TODO: Set this based on particle properties
+    cell_index[1] = 1; // TODO: Set this
+    cell_index[2] = 1; // TODO: Set this
+
+    dim_array_t E;
+    dim_array_t B;
+
+    E[0] = Ex[ cell_index[0] ];
+    E[1] = Ey[ cell_index[1] ];
+    E[2] = Ez[ cell_index[2] ];
+
+    B[0] = Bx[ cell_index[0] ];
+    B[1] = By[ cell_index[1] ];
+    B[2] = Bz[ cell_index[2] ];
+
+    // Use the Boris method to update the velocity and rotate (P62 in Birdsall) 
+    // Example of this can also be found here 
+    // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java 
+
+    // Equations:
+
+    // v_old = v- - qE/m * delta_t / 2
     // => v- = v + qE/m * delta_t / 2
-    
-  // v_new = v+ + qE/m * delta_t / 2
-  
-  // v' = v- + v- X t 
-  // v+ = v- + v' X s 
-  
-  // |v-|^2 = |v+|^2
-  // s = 2t / (1+t^2) 
-  // t = qB /m * delta_t / 2 
-  //
-  // TODO: move these data declarations
-  dim_array_t t;
-  dim_array_t E;
-  dim_array_t B;
-  dim_array_t v;
-  dim_array_t s;
-  dim_array_t v_plus;
-  dim_array_t v_minus;
-  dim_array_t v_prime;
 
-  // TODO: give E/B a value 
-  // TODO: make this do multiple particles..
- 
-  real_t t_squared = 0.0;
+    // v_new = v+ + qE/m * delta_t / 2
 
-  // Calculate t and |t^2|
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    t[i] = q/m * B[i] * 0.5 * dt;
-    t_squared += t[i]*t[i];
+    // v' = v- + v- X t 
+    // v+ = v- + v' X s 
+
+    // |v-|^2 = |v+|^2
+    // s = 2t / (1+t^2) 
+    // t = qB /m * delta_t / 2 
+    //
+    // TODO: move these data declarations
+    dim_array_t t;
+    dim_array_t v;
+    dim_array_t s;
+    dim_array_t v_plus;
+    dim_array_t v_minus;
+    dim_array_t v_prime;
+
+    // TODO: give E/B a value 
+    // TODO: make this do multiple particles..
+
+    real_t t_squared = 0.0;
+
+    // Calculate t and |t^2|
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      t[i] = q/m * B[i] * 0.5 * dt;
+      t_squared += t[i]*t[i];
+    }
+
+    // Calculate s
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      s[i] = 2*t[i] / (1+t_squared);
+    }
+
+    // Calculate v-
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      v_minus[i] = v[i] + q/m * E[i] * 0.5 * dt;
+    }
+
+    // Calculate v'
+    dim_array_t vt_cross_product = cross_product( v_minus, t);
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      v_prime[i] = v_minus[i] + vt_cross_product[i];
+    }
+
+    // Calculate v+
+    dim_array_t vs_cross_product = cross_product( v_prime, s);
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      v_plus[i] = v_minus[i] + vs_cross_product[i];
+    }
+
+    // Calculate v_new
+    for (size_t i = 0; i < NDIM; i++) 
+    {
+      v[i] = v_plus[i] + q/m * E[i] * 0.5 * dt;
+    }
+
+    // TODO: Can hoist that q/m E dt/2?
+
   }
-
-  // Calculate s
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    s[i] = 2*t[i] / (1+t_squared);
-  }
-
-  // Calculate v-
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    v_minus[i] = v[i] + q/m * E[i] * 0.5 * dt;
-  }
-
-  // Calculate v'
-  dim_array_t vt_cross_product = cross_product( v_minus, t);
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    v_prime[i] = v_minus[i] + vt_cross_product[i];
-  }
-
-  // Calculate v+
-  dim_array_t vs_cross_product = cross_product( v_prime, s);
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    v_plus[i] = v_minus[i] + vs_cross_product[i];
-  }
-
-  // Calculate v_new
-  for (size_t i = 0; i < NDIM; i++) 
-  {
-    v[i] = v_plus[i] + q/m * E[i] * 0.5 * dt;
-  }
-
-  // TODO: Can hoist that q/m E dt/2?
-  
 }
 
 
@@ -527,7 +544,7 @@ void driver(int argc, char ** argv) {
   */
 
   // Do an initial velocity move of dt/2 backwards to enable the leap frogging
-  update_velocity(-1 * (dt/2));
+  update_velocities(m, -1 * (dt/2));
 
   // Perform main loop
   logger << "Starting Main Push" << std::endl;
