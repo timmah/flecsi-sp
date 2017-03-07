@@ -8,6 +8,7 @@ set(pic_HEADERS
   entity_types.h
   mesh.h
   types.h
+  particles.h
   PARENT_SCOPE
 )
 

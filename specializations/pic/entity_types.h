@@ -9,6 +9,7 @@
 #include <flecsi/topology/mesh_types.h>
 
 #include "flecsi-sp/pic/config.h"
+#include "flecsi-sp/pic/particles.h"
 
 ///
 // \file pic_entity_types.h
@@ -112,6 +113,7 @@ private:
 }; // class pic_cell_t
 
 
+/* Moved to particles.h
 // TODO :Where is the correct place to define particles
 struct particle_t {
 
@@ -125,6 +127,7 @@ struct particle_t {
   int32_t i;        
 }; // particle_t
 
+*/
 
 
 
