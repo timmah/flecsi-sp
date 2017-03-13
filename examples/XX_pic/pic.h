@@ -14,6 +14,15 @@
 //
 ///////////////////////////// END TODO //////////////////////////////////
 
+/////////// PARTICLES //////////////
+//
+// Flecsi does *not* currently support a sensible mechanism for "an array of
+// particles", so instead we will associate an array with a cell, and hope to
+// always have room in that cell
+// 
+///////////////////////////////////
+
+
 #ifndef driver_h
 #define driver_h
 
@@ -43,7 +52,7 @@ using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
-using particle_list_t = particle_list_<float>;
+using particle_list_t = particle_list_<float>[4];
 using mesh_t = pic_mesh_t;
 using vertex_t = pic_types_t::vertex_t;
 
@@ -58,6 +67,7 @@ using real_t = double;
 // Types
 using dim_array_t = std::array<real_t,NDIM>;
 
+// TODO: This needs to be species local
 int num_particles = 0; 
 
 const real_t q = 1; // TODO: Give these values
@@ -119,7 +129,7 @@ real_t random_real(real_t min, real_t max)
  * 
  * @return Result of cross product calculation
  */
-dim_array_t cross_product( dim_array_t a, dim_array_t b) 
+dim_array_t cross_product(dim_array_t a, dim_array_t b) 
 {
   dim_array_t result; 
 
@@ -191,7 +201,8 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
             vs[ ((k+1)*width*depth) + (j    *width) + (i+1) ], // {1, 0, 1} 
             vs[ ((k+1)*width*depth) + ((j+1)*width) + (i+1) ], // {1, 1, 1} 
             }, is_domain_boundary ? cell_type_t::domain_boundary :
-            cell_type_t::unknown);
+            cell_type_t::unknown
+        );
       } // for
     } // for
   } // for
@@ -232,10 +243,29 @@ void field_initialization(mesh_t& m)
  * @param y Y coordinate of particle
  * @param z Z coordinate of particle
  */
-void insert_particle(mesh_t& m, real_t x, real_t y, real_t z)
+void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
 {
   // TODO: Implement this
+  //
+  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  auto cell_particles = particles_accesor[c];
+
+  // TODO: set these
+  real_t ux; 
+  real_t uy; 
+  real_t uz; 
+  int i;
+  real_t w;
+
   logger << "Insert particles at " << x << ", " << y << "," << z << std::endl;
+
+  // TODO: -> block is not currently intialized...need to do that first 
+  // Try and find the correct block
+  int block_number = cell_particles->block_number;
+  cell_particles->add_particle(x, y, z, i, ux, uy, uz, w);
+
+
+  // Update number of particles
   num_particles++;
 }
 
@@ -254,7 +284,8 @@ void particle_initialization(mesh_t& m)
   // TODO: We would probably want to initialize srand at some point..
   //srand((unsigned)time(0)); 
 
-  for ( auto v : m.vertices() ) {
+  for ( auto c : m.cells() ) {
+    auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
     auto coord = v->coordinates();
 
     real_t x_min = coord[0] * dx;
@@ -271,7 +302,7 @@ void particle_initialization(mesh_t& m)
       real_t y = random_real( y_min, y_max );
       real_t z = random_real( z_min, z_max );
 
-      insert_particle(m, x, y, z);
+      insert_particle(m, x, y, z, c);
     }
   }
   logger << "Done particle init" << std::endl;

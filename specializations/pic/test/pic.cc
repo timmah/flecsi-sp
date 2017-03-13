@@ -15,6 +15,7 @@ using namespace flecsi;
 using namespace flecsi::sp;
 using namespace flecsi::topology;
 using vertex_t = pic_mesh_t::vertex_t;
+using real_t = float;
 
 class pic_t
   : public ::testing::Test
@@ -98,7 +99,7 @@ TEST_F(pic_t, sanity) {
         //  is.push_back({id++, entry});
           //   Where: size_t entry = itr->entry; (size_t?!)
     
-    using entity_t = particle_t; //typename Policy::entity_t;
+    using entity_t = pic::particle_<real_t>; //typename Policy::entity_t;
     using entity_vector_t = std::vector<entity_t*>;
 
     using simple_t = topology::simple_entry<size_t>;
