@@ -11,7 +11,7 @@
 // replace all locals (eg nx) with assignment _globals (eg NX_global)
 // Add support for multiple species
 // Add an automate-able validation 
-
+//
 ///////////////////////////// END TODO //////////////////////////////////
 
 #ifndef driver_h
@@ -21,13 +21,6 @@
 #include <iostream>
 #include <iomanip>
 
-#define ENABLE_DEBUG 1 
-#if ENABLE_DEBUG                                                                
-#define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t " 
-#else                                                                              
-#define debug_out while(0) std::cout                                               
-#endif /* ENABLE_DEBUG */     
-
 // Files from flecsi
 #include <flecsi/data/data.h>
 #include <flecsi/io/io.h>
@@ -35,6 +28,14 @@
 // Files from flecsi-sp
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/entity_types.h>
+
+// TODO: Move this out to a logger class/file
+#define ENABLE_DEBUG 1 
+#if ENABLE_DEBUG                                                                
+#define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t " 
+#else                                                                              
+#define debug_out while(0) std::cout                                               
+#endif /* ENABLE_DEBUG */     
 
 // Namespaces
 using namespace flecsi;
@@ -48,9 +49,9 @@ using vertex_t = pic_types_t::vertex_t;
 
 using real_t = double;
 
-
 // Constants
-#define AoS // TODO: Need other types
+//#define AoS // TODO: Need other types
+// TODO: Read NDIM from flecsi class
 #define NDIM 3 // Number of dimensions, i.e 3D 
 // This can be pulled from the PIC class itself 
 
@@ -90,8 +91,74 @@ real_t dx = len_x/nx;
 real_t dy = len_y/ny;
 real_t dz = len_z/nz;
 
-// Methods
-void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
+///////////////////// BEGIN METHODS ////////////////////////
+
+////// HELPER METHODS //////
+//
+/// TODO: Can probably move these out into something more helper-like
+
+/** 
+ * @brief Helper function to generate a random real between two bounds.
+ * Most useful in particle placement
+ * 
+ * @param min Lower bound of the number to generate
+ * @param max Upper bound of the number to generate
+ * 
+ * @return Random number between bounds
+ */
+real_t random_real(real_t min, real_t max)
+{
+  float r = (float)rand() / (float)RAND_MAX;
+  return min + r * (max - min);
+}
+/** 
+ * @brief Helper function to calculate the cross produce of two arrays
+ * 
+ * @param a First array
+ * @param b Second array
+ * 
+ * @return Result of cross product calculation
+ */
+dim_array_t cross_product( dim_array_t a, dim_array_t b) 
+{
+  dim_array_t result; 
+
+  result[0] = a[1]*b[2] - a[2]*b[1];
+  result[1] = a[2]*b[0] - a[0]*b[2];
+  result[2] = a[0]*b[1] - a[1]*b[0];
+
+  return result; 
+}
+
+////// END HELPERS ////// 
+
+////////////////////// INPUT DECK //////////////////
+
+// TODO: Move these to a class
+void load_default_input_deck()
+{
+  logger << "Importing Default Input Deck" << std::endl;
+}
+
+void read_input_deck() 
+{
+  // TODO: Empty.. for now...
+  // At some point this will read a JSON file (using a lib)
+}
+
+///////////////// END INPUT DECK //////////////////
+
+/** 
+ * @brief Function to initialize mesh. It builds a regular of the desired size,
+ * creating cells and verticies
+ * 
+ * @param m Mesh to add data to
+ * @param nx Size in x direction (# of cells)
+ * @param ny Size in y direction (# of cells)
+ * @param nz Size in z direction (# of cells)
+ */
+void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) 
+{
 
   std::vector<vertex_t *> vs;
 
@@ -133,18 +200,13 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) {
 }
 
 
-dim_array_t cross_product( dim_array_t a, dim_array_t b) {
 
-  dim_array_t result; 
-
-  result[0] = a[1]*b[2] - a[2]*b[1];
-  result[1] = a[2]*b[0] - a[0]*b[2];
-  result[2] = a[0]*b[1] - a[1]*b[0];
-
-  return result; 
-
-}
-
+/** 
+ * @brief Initialize electric and magnetic fields.
+ * 
+ * @param m The mesh which contains the fields
+ */
+// TODO: Implement this
 void field_initialization(mesh_t& m)
 {
   // Experiment with data
@@ -162,6 +224,14 @@ void field_initialization(mesh_t& m)
 }
 
 
+/** 
+ * @brief Function to insert particle into particle store at {x,y,z}
+ * 
+ * @param m Mesh to associate particle with (may get depreciateD)
+ * @param x X coordinate of particle
+ * @param y Y coordinate of particle
+ * @param z Z coordinate of particle
+ */
 void insert_particle(mesh_t& m, real_t x, real_t y, real_t z)
 {
   // TODO: Implement this
@@ -169,14 +239,19 @@ void insert_particle(mesh_t& m, real_t x, real_t y, real_t z)
   num_particles++;
 }
 
-real_t random_real(real_t min, real_t max)
+
+/** 
+ * @brief Initialize particle store based on simulation parameters (includes
+ * injection)
+ *
+ * This currently injects NPPC * nx * ny * nz particles randomly 
+ * 
+ * @param m Mesh pointer to work on
+ */
+void particle_initialization(mesh_t& m) 
 {
-  float r = (float)rand() / (float)RAND_MAX;
-  return min + r * (max - min);
-}
 
-void particle_initialization(mesh_t& m) {
-
+  // TODO: We would probably want to initialize srand at some point..
   //srand((unsigned)time(0)); 
 
   for ( auto v : m.vertices() ) {
@@ -203,7 +278,12 @@ void particle_initialization(mesh_t& m) {
 
 }
 
-
+/** 
+ * @brief General function to initialize simulation. It sets up general data,
+ * and inits particles and fields
+ * 
+ * @param m Mesh handle 
+ */
 void init_simulation(mesh_t& m) {
   // TODO: Much of this can be pushed into the specialization 
   
@@ -226,7 +306,18 @@ void init_simulation(mesh_t& m) {
   particle_initialization(m);
 }
 
-void field_solve(mesh_t& m, real_t dt) {
+
+/** 
+ * @brief Generic field solver implementing Yee grid method outlined in:
+ *
+ * Numerical solution of initial boundary value problems involving Maxwell's
+ * equations in isotropic media, Yee
+ * 
+ * @param m Mesh pointer 
+ * @param dt Time delta to step solver by
+ */
+void field_solve(mesh_t& m, real_t dt) 
+{
   
   // TODO: Double check these are the right values for EM (not ES)
 
@@ -267,7 +358,9 @@ void field_solve(mesh_t& m, real_t dt) {
       for (int i = 0; i < NX; i++) {
   */
 
-  for ( auto v : m.vertices() ) {
+  for ( auto v : m.vertices() ) 
+  {
+
     /* Convert this from 3d loop to flecsi loop
         Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
             (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
@@ -320,8 +413,11 @@ void field_solve(mesh_t& m, real_t dt) {
     Ez[v] = ( (1/(mu*eps)) * ( ((By[v] - By[v_mj] ) / dx ) +
           ((Bx[v] - Bx[v_mi]) / dy)) + Jz[v]) * dt + Ez[v];
   }
-
 }
+
+/** 
+ * @brief Particle mover 
+ */
 void particle_move() { 
 
   // mult by delta_t and divide by delta_x 
@@ -342,6 +438,37 @@ void particle_move() {
      */
 }
 
+/** 
+ * @brief Function to interpolate from field points at a given grid point
+ * This currently uses a simple nearest grid-points shape weightings
+ * 
+ * @param m The mesh object to get data references 
+ * @param field The accessor to the field to work on
+ * @param dx The x position to interpolate to
+ * @param dy The y position to interpolate to
+ * @param dz The z position to interpolate to
+ * 
+ * @return An n-dimensional array containing the interpolated weights
+ */
+dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_t dz) 
+{
+  dim_array_t field_vals; 
+  for ( auto c : m.cells() )
+  {
+    for ( auto v : m.vertices(c) ) {
+      field[v] = 1.0;
+    }
+  }
+
+  return field_vals;
+}
+
+/** 
+ * @brief Velocity update implementing Boris rotation
+ * 
+ * @param mesh Mesh pointer
+ * @param dt Time step to step by
+ */
 void update_velocities(mesh_t& mesh, real_t dt) {
 
   auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
@@ -363,6 +490,7 @@ void update_velocities(mesh_t& mesh, real_t dt) {
     dim_array_t E;
     dim_array_t B;
 
+    // TODO: This should interpolate based on particle shape 
     E[0] = Ex[ cell_index[0] ];
     E[1] = Ey[ cell_index[1] ];
     E[2] = Ez[ cell_index[2] ];
@@ -446,17 +574,24 @@ void update_velocities(mesh_t& mesh, real_t dt) {
   }
 }
 
-
-
-void particle_push() {
+// TODO: Document this
+void particle_push() 
+{
+  // TODO: Implement this
 
 }
 
+// TODO: Document this
 void fields_half() {} 
+
+// TODO: Document this
 void fields_final() {} 
 
-// Test main PIC kernel implementation
-void kernel() {
+/** 
+ * @brief Main kernel which makes main PIC algorithm calls 
+ */
+void kernel() 
+{
 
   // Equations of motion
   // Leap frog method. 
@@ -499,17 +634,16 @@ void kernel() {
 
 }
 
-void load_default_input_deck()
-{
-  logger << "Importing Default Input Deck" << std::endl;
-}
 
-void read_input_deck() 
-{
-  // TODO: Empty.. for now...
-  // At some point this will read a JSON file (using a lib)
-}
-
+/** 
+ * @brief Driver function to be called by flecsi, functionally equivalent to
+ * main method
+ *
+ * Sets up simulation, call main kernel
+ * 
+ * @param argc argc
+ * @param argv argv
+ */
 void driver(int argc, char ** argv) {
 
   // Declare mesh
