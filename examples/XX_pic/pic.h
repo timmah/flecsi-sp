@@ -11,6 +11,8 @@
 // replace all locals (eg nx) with assignment _globals (eg NX_global)
 // Add support for multiple species
 // Add an automate-able validation 
+// Make the mesh stateful so I don't have to pass it around
+// Handle the situaton where a particle leaves it's voxel
 //
 ///////////////////////////// END TODO //////////////////////////////////
 
@@ -18,7 +20,7 @@
 //
 // Flecsi does *not* currently support a sensible mechanism for "an array of
 // particles", so instead we will associate an array with a cell, and hope to
-// always have room in that cell
+// always have room in that cell..
 // 
 ///////////////////////////////////
 
@@ -287,6 +289,7 @@ void particle_initialization(mesh_t& m)
   // TODO: We would probably want to initialize srand at some point..
   //srand((unsigned)time(0)); 
 
+  logger << "Init particles... " << std::endl;
   for ( auto c : m.cells() ) {
     auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
     auto coord = v->coordinates();
@@ -470,7 +473,7 @@ void field_solve(mesh_t& m, real_t dt)
 /** 
  * @brief Particle mover 
  */
-void particle_move() { 
+void particle_move(mesh_t& m, real_t dt) { 
 
   // mult by delta_t and divide by delta_x 
   // Swap in F/m = qE/m 
@@ -513,6 +516,29 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
   }
 
   return field_vals;
+}
+
+
+// TODO: Document this
+dim_array_t interpolate_fields(mesh_t& m)
+{
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
+  auto By = get_accessor(m, fields, by, double, dense, 0);                    
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);                    
+
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);                    
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);                    
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);                    
+
+  interpolate_field(m, Bx, dx, dy, dz);
+  interpolate_field(m, By, dx, dy, dz);
+  interpolate_field(m, Bz, dx, dy, dz);
+
+  interpolate_field(m, Ex, dx, dy, dz);
+  interpolate_field(m, Ey, dx, dy, dz);
+  interpolate_field(m, Ez, dx, dy, dz);
+  
+  // TODO: Do I need to interpolate j?
 }
 
 /** 
@@ -627,22 +653,26 @@ void update_velocities(mesh_t& mesh, real_t dt) {
 }
 
 // TODO: Document this
-void particle_push() 
+void particle_push(mesh_t& mesh) 
 {
-  // TODO: Implement this
-
+  update_velocities(mesh, dt);
+  particle_move(mesh, dt);
 }
 
 // TODO: Document this
-void fields_half() {} 
+void fields_half(mesh_t& m) {
+  field_solve(m, dt);
+} 
 
 // TODO: Document this
-void fields_final() {} 
+void fields_final(mesh_t& m) {
+  field_solve(m, dt);
+} 
 
 /** 
  * @brief Main kernel which makes main PIC algorithm calls 
  */
-void kernel() 
+void kernel(mesh_t& m) 
 {
 
   // Equations of motion
@@ -678,11 +708,13 @@ void kernel()
       
   // FDTD (Finite-Difference Time-Domain)
   
-  fields_half();
+  fields_half(m);
 
-  particle_push();
+  interpolate_fields(m);
 
-  fields_final();
+  particle_push(m);
+
+  fields_final(m);
 
 }
 
@@ -737,7 +769,7 @@ void driver(int argc, char ** argv) {
   for (size_t i = 0; i < num_steps; i++) 
   {
     logger << "-> Start Step " << i << std::endl;
-    kernel();
+    kernel(m);
   }
   logger << "Finished Main Push" << std::endl;
 

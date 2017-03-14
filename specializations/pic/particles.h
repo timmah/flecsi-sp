@@ -110,15 +110,15 @@ namespace flecsi {
                         set_w( i, v, w  );
                         set_i( i, v, ii );
 
-                        std::cout << "Storing particle " << 
-                            block[block_number].count << " at " << block_number 
-                            << std::endl;
+                        //std::cout << "Storing particle " << 
+                            //block[block_number].count << " at " << block_number 
+                            //<< std::endl;
 
                         block[block_number].count++;
 
                         if (block[block_number].count >= PARTICLE_BLOCK_SIZE) 
                         {
-                            std::cout << "Moving block along" << std::endl;
+                            //std::cout << "Moving block along" << std::endl;
                             block[block_number].count--;
                             block_number++;
                         }
