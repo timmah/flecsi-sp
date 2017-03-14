@@ -52,7 +52,12 @@ using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
-using particle_list_t = particle_list_<float>[4];
+using particle_list_t = particle_list_<float>;
+
+// Do this at the particle list block level
+//#define PARTICLE_LIST_SIZE 4 
+//using particle_list_array_t = particle_list_t[PARTICLE_LIST_SIZE];
+
 using mesh_t = pic_mesh_t;
 using vertex_t = pic_types_t::vertex_t;
 
@@ -248,7 +253,7 @@ void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
   // TODO: Implement this
   //
   auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
-  auto cell_particles = particles_accesor[c];
+  auto& cell_particles = particles_accesor[c];
 
   // TODO: set these
   real_t ux; 
@@ -257,13 +262,11 @@ void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
   int i;
   real_t w;
 
-  logger << "Insert particles at " << x << ", " << y << "," << z << std::endl;
-
   // TODO: -> block is not currently intialized...need to do that first 
   // Try and find the correct block
-  int block_number = cell_particles->block_number;
-  cell_particles->add_particle(x, y, z, i, ux, uy, uz, w);
+  cell_particles.add_particle(x, y, z, i, ux, uy, uz, w);
 
+  //std::cout << cell_particles.block[ cell_particles.block_number ].count << std::endl;
 
   // Update number of particles
   num_particles++;
@@ -315,7 +318,8 @@ void particle_initialization(mesh_t& m)
  * 
  * @param m Mesh handle 
  */
-void init_simulation(mesh_t& m) {
+void init_simulation(mesh_t& m) 
+{
   // TODO: Much of this can be pushed into the specialization 
   
   // Register data
@@ -331,7 +335,24 @@ void init_simulation(mesh_t& m) {
   register_data(m, fields, by, double, dense, 1, vertices);        
   register_data(m, fields, bz, double, dense, 1, vertices);        
 
+  // TODO: Am I going to get in trouble using a non-trivial type (has a pointer in)
   register_data(m, particles, p, particle_list_t, dense, 1, cells);        
+
+  // This may not actually be needed?
+  // Initialize Array of Particles
+  
+  // Do this init in the constructor
+  /*
+  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  for ( auto c : m.cells() )
+  {
+    auto cell_particles = particles_accesor;
+    cell_particles.block = new particle_t();
+    std::cout << "Cell_particles[i] " << cell_particles[c].get_x(0,0) << std::endl;
+    //cell_particles[i] = new particle_list_t();
+  }
+  */
+  
 
   field_initialization(m);
   particle_initialization(m);
