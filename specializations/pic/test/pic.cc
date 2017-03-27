@@ -3,6 +3,9 @@
  * All rights reserved.
  *~-------------------------------------------------------------------------~~*/
 
+// Note: This currently doesn't test anything of note, and is more a sanity
+// check to ensure the files all compile
+
 #include <cinchtest.h>
 #include <vector>
 
@@ -34,7 +37,14 @@ protected:
     for(size_t k(0); k<N+1; ++k) {
       for(size_t j(0); j<N+1; ++j) {
         for(size_t i(0); i<N+1; ++i) {
-          vs.push_back(m.make_vertex({double(i), double(j), double(k)}));
+          // TODO: Check this logic
+          bool is_domain_boundary = i==0 || j==0 || i==(N-1) || j==(N-1) || 
+            k == 0 || k == (N-1); 
+          vs.push_back(
+              m.make_vertex({double(i), double(j), double(k)},
+              is_domain_boundary ? entity_type_t::domain_boundary :
+                entity_type_t::unknown
+          ));
         } // for
       } // for
     } // for
@@ -57,8 +67,8 @@ protected:
               vs[ ((k+1)*width*depth) + (j    *width) + i ], // {1, 0, 0} 
               vs[ ((k+1)*width*depth) + (j    *width) + (i+1) ], // {1, 0, 1} 
               vs[ ((k+1)*width*depth) + ((j+1)*width) + (i+1) ], // {1, 1, 1} 
-          }, is_domain_boundary ? cell_type_t::domain_boundary :
-            cell_type_t::unknown);
+          }, is_domain_boundary ? entity_type_t::domain_boundary :
+            entity_type_t::unknown);
         } // for
       } // for
     }

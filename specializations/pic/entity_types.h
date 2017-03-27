@@ -20,6 +20,12 @@
 namespace flecsi {
 namespace sp {
 
+enum class entity_type_t : size_t {
+  unknown,
+  domain_boundary
+}; // enum entity_type_t
+
+
 ///
 // \struct pic_vertex_t
 // \brief FIXME
@@ -37,9 +43,10 @@ struct pic_vertex_t
   ///
   pic_vertex_t(
     topology::mesh_topology_base_t & mesh,
-    const point_t & coordinates
+    const point_t & coordinates,
+    entity_type_t type
   )
-    : mesh_(mesh), coordinates_(coordinates)
+    : mesh_(mesh), coordinates_(coordinates), type_(type)
   {
   }
 
@@ -50,17 +57,26 @@ struct pic_vertex_t
     return coordinates_;
   } // coordinates
 
+  entity_type_t
+  type()
+  {
+    return type_;
+  } // type
+
 private:
 
   topology::mesh_topology_base_t & mesh_;
   point_t coordinates_;
+  entity_type_t type_;
 
 }; // class pic_vertex_t
 
+/*
 enum class cell_type_t : size_t {
   unknown,
   domain_boundary
 }; // enum cell_type_t
+*/
 
 ///
 // \struct pic_cell_t
@@ -77,8 +93,13 @@ struct pic_cell_t
   //
   // \param mesh FIXME
   ///
-  pic_cell_t(topology::mesh_topology_base_t & mesh, cell_type_t type)
-    : mesh_(mesh), type_(type) {}
+  pic_cell_t(
+      topology::mesh_topology_base_t & mesh, 
+      entity_type_t type
+  )
+    : mesh_(mesh), type_(type)
+  {
+  }
 
   std::vector<size_t>
   create_entities(
@@ -99,7 +120,7 @@ struct pic_cell_t
     return 1.0;
   } // volume
 
-  cell_type_t
+  entity_type_t
   type()
   {
     return type_;
@@ -108,7 +129,7 @@ struct pic_cell_t
 private:
 
   topology::mesh_topology_base_t & mesh_;
-  cell_type_t type_;
+  entity_type_t type_;
 
 }; // class pic_cell_t
 

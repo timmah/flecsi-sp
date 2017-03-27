@@ -182,7 +182,15 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
   for(size_t k(0); k<nz+1; ++k) {
     for(size_t j(0); j<ny+1; ++j) {
       for(size_t i(0); i<nx+1; ++i) {
-        vs.push_back(m.make_vertex({double(i), double(j), double(k)}));
+
+        bool is_domain_boundary = i==0 || j==0 || i==(nx-1) || j==(ny-1) || 
+          k == 0 || k == (nz-1); 
+
+        vs.push_back(
+              m.make_vertex({double(i), double(j), double(k)},
+              is_domain_boundary ? entity_type_t::domain_boundary :
+                entity_type_t::unknown
+          ));
       } // for
     } // for
   } // for
@@ -207,8 +215,8 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
             vs[ ((k+1)*width*depth) + (j    *width) + i ], // {1, 0, 0} 
             vs[ ((k+1)*width*depth) + (j    *width) + (i+1) ], // {1, 0, 1} 
             vs[ ((k+1)*width*depth) + ((j+1)*width) + (i+1) ], // {1, 1, 1} 
-            }, is_domain_boundary ? cell_type_t::domain_boundary :
-            cell_type_t::unknown
+            }, is_domain_boundary ? entity_type_t::domain_boundary :
+            entity_type_t::unknown
         );
       } // for
     } // for
@@ -325,6 +333,7 @@ void init_simulation(mesh_t& m)
 {
   // TODO: Much of this can be pushed into the specialization 
   
+  // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
   register_data(m, fields, jx, double, dense, 1, vertices);        
   register_data(m, fields, jy, double, dense, 1, vertices);        
@@ -339,6 +348,7 @@ void init_simulation(mesh_t& m)
   register_data(m, fields, bz, double, dense, 1, vertices);        
 
   // TODO: Am I going to get in trouble using a non-trivial type (has a pointer in)
+    // I could hoist the array part of this to the code level
   register_data(m, particles, p, particle_list_t, dense, 1, cells);        
 
   // This may not actually be needed?
@@ -416,6 +426,8 @@ void field_solve(mesh_t& m, real_t dt)
   for ( auto v : m.vertices() ) 
   {
 
+    logger << "v " << v.id() << " size Bx " << Bx.size() << " size Ey " << Ey.size() << std::endl;
+    logger << "v coord " << v->coordinates() << std::endl;
     /* Convert this from 3d loop to flecsi loop
         Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
             (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
@@ -458,6 +470,7 @@ void field_solve(mesh_t& m, real_t dt)
     Bz[v] = Bz[v] + dt * ( (Ex[v_pk] - Ex[v]) / dy - 
         (Ey[v_pj] - Ey[v]) / dx );
 
+    /*
     // TODO: Check these indexs
     Ex[v] = ( (1/(mu*eps)) * ( ((Bz[v] - Bz[v_mj] ) / dy ) +
           ((By[v] - By[v_mi]) / dz)) + Jx[v]) * dt + Ex[v];
@@ -467,6 +480,7 @@ void field_solve(mesh_t& m, real_t dt)
 
     Ez[v] = ( (1/(mu*eps)) * ( ((By[v] - By[v_mj] ) / dx ) +
           ((Bx[v] - Bx[v_mi]) / dy)) + Jz[v]) * dt + Ez[v];
+    */
   }
 }
 

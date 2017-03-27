@@ -28,10 +28,10 @@ namespace pic {
     cells
   }; // enum pic_index_spaces_t
 
-  enum pic_cell_index_spaces_t : size_t {
+  enum pic_entity_index_spaces_t : size_t {
     interior,
     boundary
-  }; // enum pic_cell_index_spaces_t
+  }; // enum pic_entity_index_spaces_t
 
 } // namespace pic
 
@@ -67,37 +67,15 @@ public:
    ~pic_mesh_t() {}
 
   ///
-  // Initialize the mesh.
-  ///
-  void
-  init()
-  {
-    // Initialize domain 0 of the mesh topology.
-    base_t::init<0>();
-
-    // Use a predicate function to create the interior cells
-    // index space
-    interior_cells_ =
-      base_t::entities<dimension, 0>().filter(is_interior);
-
-    // Use a predicate function to create the domain boundary cells
-    // index space
-    boundary_cells_ =
-      base_t::entities<dimension, 0>().filter(is_domain_boundary);
-
-    //register_data(m, hydro, pressure, double, global, 1);
-
-  } // init
-
-  ///
   // Add a vertex to the mesh topology.
   ///
   vertex_t *
   make_vertex(
-    const point_t & pos
+    const point_t & pos,
+    entity_type_t type
   )
   {
-    auto v = base_t::make<vertex_t>(*this, pos);
+    auto v = base_t::make<vertex_t>(*this, pos, type);
     base_t::add_entity<0, 0>(v);
     return v;
   } // make_vertex
@@ -108,7 +86,7 @@ public:
   cell_t *
   make_cell(
     const std::initializer_list<vertex_t *> & vertices,
-    cell_type_t type
+    entity_type_t type
   )
   {
     auto c = base_t::make<cell_t>(*this, type);
@@ -242,32 +220,48 @@ public:
   // TODO: Make this private
   topology::index_space<simple_t, false, true, false> particles_is;  
 
+  void init();
 private:
 
   ///
   // Predicate function to create index space for accessing
   // domain boundary cells.
   ///
+  static bool is_domain_boundary(
+      entity_type_t e
+  )
+  {
+    return e == entity_type_t::domain_boundary;
+  }
+
+  template<class E>
   static
   bool
   is_domain_boundary(
-    cell_t * c
+    //cell_t * c
+    E* c
   )
   {
-    return c->type() == cell_type_t::domain_boundary;
-  } // is_domain_boundary
+    std::cout << "Tyoe " << typeid(E).name() << std::endl;
+    std::cout << "NOT specialized" << std::endl;
+    assert(0); // Something went wrong if we got here..
+  } // is_interior
 
   ///
   // Predicate function to create index space for accessing
   // interior cells.
   ///
+  template<class E>
   static
   bool
   is_interior(
-    cell_t * c
+    //cell_t * c
+    E* c
   )
   {
-    return !is_domain_boundary(c);
+    std::cout << "Tyoe " << typeid(E).name() << std::endl;
+    std::cout << "NOT specialized" << std::endl;
+    assert(0); // Something went wrong if we got here..
   } // is_interior
 
   topology::index_space<
@@ -276,7 +270,92 @@ private:
   topology::index_space<
     topology::domain_entity<0, cell_t>, false, true, false> boundary_cells_;
 
+  topology::index_space<
+    topology::domain_entity<0, vertex_t>, false, true, false> interior_vertices_;
+
+  topology::index_space<
+    topology::domain_entity<0, vertex_t>, false, true, false> boundary_vertices;
+  
 }; // class pic_mesh_t
+
+  using cell_t = pic_types_t::cell_t;
+  template<>
+  bool
+  pic_mesh_t::is_interior<cell_t>(
+    cell_t* c
+  )
+  {
+    std::cout << "special specialized" << std::endl;
+    return !is_domain_boundary(c->type());
+  } 
+
+  using vertex_t = pic_types_t::vertex_t;
+  template<>
+  bool
+  pic_mesh_t::is_interior<vertex_t>(
+    vertex_t* v
+  )
+  {
+    std::cout << "special specialized" << std::endl;
+    return !is_domain_boundary(v->type());
+  } 
+
+  using cell_t = pic_types_t::cell_t;
+  template<>
+  bool
+  pic_mesh_t::is_domain_boundary<cell_t>(
+    cell_t* c
+  )
+  {
+    return is_domain_boundary(c->type());
+  } 
+
+/*
+  using vertex_t = pic_types_t::vertex_t;
+  template<>
+  bool
+  pic_mesh_t::is_interior<vertex_t>(
+    vertex_t* c
+  )
+  {
+    std::cout << "vertex special specialized" << std::endl;
+    return !is_domain_boundary(c->type());
+  } 
+*/
+
+
+  // I had to move this outside as it uses the specialized is_interior
+  ///
+  // Initialize the mesh.
+  ///
+  void
+  pic_mesh_t::init()
+  {
+    // Initialize domain 0 of the mesh topology.
+    base_t::init<0>();
+
+    // Use a predicate function to create the interior cells
+    // index space
+    interior_cells_ =
+      base_t::entities<dimension, 0>().filter(is_interior<cell_t>);
+
+    // Use a predicate function to create the domain boundary cells
+    // index space
+    boundary_cells_ =
+      base_t::entities<dimension, 0>().filter(is_domain_boundary<cell_t>);
+
+    // TODO: Check these indicies
+    interior_vertices_ =
+      base_t::entities<1, 0>().filter(is_interior<vertex_t>);
+    /*
+
+    interior_vertices_ =
+      base_t::entities<0, 0>().filter(is_domain_boundary<vertex_t>);
+      */
+
+    //register_data(m, hydro, pressure, double, global, 1);
+
+  } // init
 
 } // namespace sp
 } // namespace flecsi
