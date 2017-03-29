@@ -358,7 +358,7 @@ private:
 
     // TODO: Check these indicies
     interior_vertices_ =
-      base_t::entities<2, 0>().filter(is_interior<vertex_t>);
+      base_t::entities<0, 0>().filter(is_interior<vertex_t>);
 
     /*
     boundary_vertices_ =

@@ -183,8 +183,8 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
     for(size_t j(0); j<ny+1; ++j) {
       for(size_t i(0); i<nx+1; ++i) {
 
-        bool is_domain_boundary = i==0 || j==0 || i==(nx-1) || j==(ny-1) || 
-          k == 0 || k == (nz-1); 
+        bool is_domain_boundary = i==0 || j==0 || i==(nx) || j==(ny) || 
+          k == 0 || k == (nz); 
 
         vs.push_back(
               m.make_vertex({double(i), double(j), double(k)},
@@ -423,8 +423,8 @@ void field_solve(mesh_t& m, real_t dt)
       for (int i = 0; i < NX; i++) {
   */
 
-  std::cout << "Loop for " << m.cells(pic::interior).size() << std::endl;
   std::cout << "Loop for " << m.vertices(pic::interior).size() << std::endl;
+  std::cout << "of total " << m.vertices().size() << std::endl;
   for ( auto v : m.vertices(pic::interior) ) 
   {
 
