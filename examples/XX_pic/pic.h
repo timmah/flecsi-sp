@@ -423,7 +423,9 @@ void field_solve(mesh_t& m, real_t dt)
       for (int i = 0; i < NX; i++) {
   */
 
-  for ( auto v : m.vertices() ) 
+  std::cout << "Loop for " << m.cells(pic::interior).size() << std::endl;
+  std::cout << "Loop for " << m.vertices(pic::interior).size() << std::endl;
+  for ( auto v : m.vertices(pic::interior) ) 
   {
 
     logger << "v " << v.id() << " size Bx " << Bx.size() << " size Ey " << Ey.size() << std::endl;

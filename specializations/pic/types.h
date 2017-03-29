@@ -29,7 +29,7 @@ struct pic_types_t
   //--------------------------------------------------------------------------//
   // Define local traits to satisfy mesh_topology requirements.
   //--------------------------------------------------------------------------//
-
+  
   /// The dimension of the mesh
   static constexpr size_t num_dimensions =
     pic_config_t::num_dimensions;
@@ -53,7 +53,7 @@ struct pic_types_t
   using domain_ = topology::domain_<D>;
 
   ///
-  // Definitions of burton mesh entities and their domain.
+  // Definitions of mesh entities and their domain.
   // clang-format off
   ///
   using entity_types =

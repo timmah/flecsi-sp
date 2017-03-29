@@ -185,7 +185,6 @@ public:
     return cells(e.entity());
   }
 
-  /*
   auto
   cells(
     size_t is
@@ -201,7 +200,21 @@ public:
     } // switch
   } // cells
 
-  */
+  auto
+  vertices(
+    size_t is
+  )
+  {
+    switch(is) {
+      case pic::interior:
+        return interior_vertices_;
+      case pic::boundary:
+        return boundary_vertices_;
+      default:
+        assert(false && "unknown index space");
+    } // switch
+  } // cells
+
   /*
   auto
   cells(
@@ -274,7 +287,7 @@ private:
     topology::domain_entity<0, vertex_t>, false, true, false> interior_vertices_;
 
   topology::index_space<
-    topology::domain_entity<0, vertex_t>, false, true, false> boundary_vertices;
+    topology::domain_entity<0, vertex_t>, false, true, false> boundary_vertices_;
   
 }; // class pic_mesh_t
 
@@ -285,7 +298,6 @@ private:
     cell_t* c
   )
   {
-    std::cout << "special specialized" << std::endl;
     return !is_domain_boundary(c->type());
   } 
 
@@ -296,7 +308,7 @@ private:
     vertex_t* v
   )
   {
-    std::cout << "special specialized" << std::endl;
+    std::cout << "Is cell interior? " << !is_domain_boundary(v->type()) << std::endl;
     return !is_domain_boundary(v->type());
   } 
 
@@ -346,12 +358,12 @@ private:
 
     // TODO: Check these indicies
     interior_vertices_ =
-      base_t::entities<1, 0>().filter(is_interior<vertex_t>);
-    /*
+      base_t::entities<2, 0>().filter(is_interior<vertex_t>);
 
-    interior_vertices_ =
-      base_t::entities<0, 0>().filter(is_domain_boundary<vertex_t>);
-      */
+    /*
+    boundary_vertices_ =
+      base_t::entities<1?, 0>().filter(is_domain_boundary<vertex_t>);
+    */
 
     //register_data(m, hydro, pressure, double, global, 1);
 
