@@ -308,7 +308,6 @@ private:
     vertex_t* v
   )
   {
-    std::cout << "Is cell interior? " << !is_domain_boundary(v->type()) << std::endl;
     return !is_domain_boundary(v->type());
   } 
 

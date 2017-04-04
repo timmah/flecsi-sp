@@ -249,6 +249,17 @@ void field_initialization(mesh_t& m)
   }
 }
 
+// TODO: Document this
+std::array<real_t, 3> init_particle_velocity()
+{
+  // TODO: Implement this
+}
+
+// TODO: Document this
+real_t init_particle_weight()
+{
+  // TODO: Implement this
+}
 
 /** 
  * @brief Function to insert particle into particle store at {x,y,z}
@@ -265,18 +276,18 @@ void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
   auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
   auto& cell_particles = particles_accesor[c];
 
+  std::array<real_t,3> velocity = init_particle_velocity();
+
+  real_t ux = velocity[0]; 
+  real_t uy = velocity[1];
+  real_t uz = velocity[2];
+
   // TODO: set these
-  real_t ux; 
-  real_t uy; 
-  real_t uz; 
-  int i;
-  real_t w;
+  int i; // implicit?
+  real_t w = init_particle_weight();
 
-  // TODO: -> block is not currently intialized...need to do that first 
-  // Try and find the correct block
+
   cell_particles.add_particle(x, y, z, i, ux, uy, uz, w);
-
-  //std::cout << cell_particles.block[ cell_particles.block_number ].count << std::endl;
 
   // Update number of particles
   num_particles++;
@@ -423,13 +434,9 @@ void field_solve(mesh_t& m, real_t dt)
       for (int i = 0; i < NX; i++) {
   */
 
-  std::cout << "Loop for " << m.vertices(pic::interior).size() << std::endl;
-  std::cout << "of total " << m.vertices().size() << std::endl;
   for ( auto v : m.vertices(pic::interior) ) 
   {
 
-    logger << "v " << v.id() << " size Bx " << Bx.size() << " size Ey " << Ey.size() << std::endl;
-    logger << "v coord " << v->coordinates() << std::endl;
     /* Convert this from 3d loop to flecsi loop
         Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
             (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
@@ -472,8 +479,7 @@ void field_solve(mesh_t& m, real_t dt)
     Bz[v] = Bz[v] + dt * ( (Ex[v_pk] - Ex[v]) / dy - 
         (Ey[v_pj] - Ey[v]) / dx );
 
-    /*
-    // TODO: Check these indexs
+    // TODO: Check these indexes
     Ex[v] = ( (1/(mu*eps)) * ( ((Bz[v] - Bz[v_mj] ) / dy ) +
           ((By[v] - By[v_mi]) / dz)) + Jx[v]) * dt + Ex[v];
 
@@ -482,7 +488,6 @@ void field_solve(mesh_t& m, real_t dt)
 
     Ez[v] = ( (1/(mu*eps)) * ( ((By[v] - By[v_mj] ) / dx ) +
           ((Bx[v] - Bx[v_mi]) / dy)) + Jz[v]) * dt + Ez[v];
-    */
   }
 }
 
@@ -502,11 +507,44 @@ void particle_move(mesh_t& m, real_t dt) {
   // KE = m/2 * v_old * v_new 
   //
 
-  /* TODO: Implement this once we have a particle store
-     dx += ux*dt;
-     dy += uy*dt;
-     dz += uz*dt;
-     */
+  // TODO: Implement this once we have a particle store
+  
+  for ( auto c : m.cells() ) {
+
+    auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+    auto& cell_particles = particles_accesor[c];
+
+    // TODO: Is there a way abstract this loop structure with the current particle structure 
+    // TODO: this may need to be "active ppc" or similar 
+    //
+    // Only iterate over used blocks
+    for (size_t i = 0; i < cell_particles.block_number+1; i++)
+    {
+
+      for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+      {
+        // TODO: Does this need masking
+
+        real_t x = cell_particles.get_x(i, v);
+        real_t y = cell_particles.get_y(i, v);
+        real_t z = cell_particles.get_z(i, v);
+
+        real_t ux = cell_particles.get_ux(i, v);
+        real_t uy = cell_particles.get_uy(i, v);
+        real_t uz = cell_particles.get_uz(i, v);
+
+        x += ux*dt;
+        y += uy*dt;
+        z += uz*dt;
+
+        cell_particles.set_x(x, i, v);
+        cell_particles.set_y(y, i, v);
+        cell_particles.set_z(z, i, v);
+
+      }
+    }
+  }
+
 }
 
 /** 
