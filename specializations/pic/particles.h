@@ -31,8 +31,10 @@ namespace flecsi {
                     //TODO: Need to attribute_aligned on each array
             };
 
+
             template <class real_t> class particle_list_
             { 
+
                 using particle_t = particle_<real_t>;
 
                 public:

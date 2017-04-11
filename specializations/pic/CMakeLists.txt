@@ -9,6 +9,7 @@ set(pic_HEADERS
   mesh.h
   types.h
   particles.h
+  boundary.h
   PARENT_SCOPE
 )
 

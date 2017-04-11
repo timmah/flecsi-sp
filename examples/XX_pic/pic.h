@@ -40,6 +40,8 @@
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/entity_types.h>
 
+#include "boundary.h"
+
 // TODO: Move this out to a logger class/file
 #define ENABLE_DEBUG 1 
 #if ENABLE_DEBUG                                                                
@@ -107,6 +109,8 @@ real_t len_z = len_z_global;
 real_t dx = len_x/nx;
 real_t dy = len_y/ny;
 real_t dz = len_z/nz;
+
+BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
 
 ///////////////////// BEGIN METHODS ////////////////////////
 
@@ -507,8 +511,6 @@ void particle_move(mesh_t& m, real_t dt) {
   // KE = m/2 * v_old * v_new 
   //
 
-  // TODO: Implement this once we have a particle store
-  
   for ( auto c : m.cells() ) {
 
     auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
@@ -523,7 +525,7 @@ void particle_move(mesh_t& m, real_t dt) {
 
       for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
       {
-        // TODO: Does this need masking
+        // TODO: Does this need masking for the empty unfilled blocks 
 
         real_t x = cell_particles.get_x(i, v);
         real_t y = cell_particles.get_y(i, v);
