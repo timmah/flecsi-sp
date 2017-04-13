@@ -12,6 +12,7 @@ set(pic_HEADERS
   species.h
   boundary.h
   simulation_parameters.h
+  helpers.h
   PARENT_SCOPE
 )
 

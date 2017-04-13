@@ -18,7 +18,7 @@ using namespace flecsi;
 using namespace flecsi::sp;
 using namespace flecsi::topology;
 using vertex_t = pic_mesh_t::vertex_t;
-using real_t = float;
+//using real_t = float;
 
 class pic_t
   : public ::testing::Test

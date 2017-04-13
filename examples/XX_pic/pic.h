@@ -26,9 +26,12 @@
 // 
 ///////////////////////////////////
 
-
 #ifndef driver_h
 #define driver_h
+
+// TODO: Move this out to a logger class/file
+// Currently this should be above helpers.h
+#define ENABLE_DEBUG 1 
 
 // Includes 
 #include <iostream>
@@ -39,19 +42,15 @@
 #include <flecsi/io/io.h>
 
 // Files from flecsi-sp
+#include <flecsi-sp/pic/types.h>
+#include <flecsi-sp/pic/helpers.h> // should come in before types, as it inself needs it
+
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/entity_types.h>
 #include <flecsi-sp/pic/simulation_parameters.h>
 #include <flecsi-sp/pic/boundary.h>
 #include <flecsi-sp/pic/species.h>
 
-// TODO: Move this out to a logger class/file
-#define ENABLE_DEBUG 1 
-#if ENABLE_DEBUG                                                                
-#define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t " 
-#else                                                                              
-#define debug_out while(0) std::cout                                               
-#endif /* ENABLE_DEBUG */     
 
 // Namespaces
 using namespace flecsi;
@@ -59,75 +58,29 @@ using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
-using real_t = double;
+// Type imports 
+using mesh_t = pic_mesh_t;
+using vertex_t = pic_types_t::vertex_t;
 
+// Type implementations 
 using particle_list_t = particle_list_<real_t>;
 using species_t = species_<real_t>;
+using Parameters = flecsi::sp::pic::Parameters_<real_t>;
+using dim_array_t = flecsi::sp::dim_array_t;
+
+// Constants
+//#define AoS // TODO: Need other types
+// TODO: Read NDIM from flecsi class and consolidate the two variables?
 
 // Do this at the particle list block level
 //#define PARTICLE_LIST_SIZE 4 
 //using particle_list_array_t = particle_list_t[PARTICLE_LIST_SIZE];
 
-using mesh_t = pic_mesh_t;
-using vertex_t = pic_types_t::vertex_t;
-
-
-// Constants
-//#define AoS // TODO: Need other types
-// TODO: Read NDIM from flecsi class
-#define NDIM 3 // Number of dimensions, i.e 3D 
-// This can be pulled from the PIC class itself 
-
-// Types
-using dim_array_t = std::array<real_t,NDIM>;
-using Parameters = flecsi::sp::pic::Parameters_<real_t>;
-
-
-
+// TODO: find somewhere nice to store these global simulation properties? 
 BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
-
 std::vector<species_t> species;
 
 ///////////////////// BEGIN METHODS ////////////////////////
-
-////// HELPER METHODS //////
-//
-/// TODO: Can probably move these out into something more helper-like
-
-/** 
- * @brief Helper function to generate a random real between two bounds.
- * Most useful in particle placement
- * 
- * @param min Lower bound of the number to generate
- * @param max Upper bound of the number to generate
- * 
- * @return Random number between bounds
- */
-real_t random_real(real_t min, real_t max)
-{
-  float r = (float)rand() / (float)RAND_MAX;
-  return min + r * (max - min);
-}
-/** 
- * @brief Helper function to calculate the cross produce of two arrays
- * 
- * @param a First array
- * @param b Second array
- * 
- * @return Result of cross product calculation
- */
-dim_array_t cross_product(dim_array_t a, dim_array_t b) 
-{
-  dim_array_t result; 
-
-  result[0] = a[1]*b[2] - a[2]*b[1];
-  result[1] = a[2]*b[0] - a[0]*b[2];
-  result[2] = a[0]*b[1] - a[1]*b[0];
-
-  return result; 
-}
-
-////// END HELPERS ////// 
 
 ////////////////////// INPUT DECK //////////////////
 
@@ -313,7 +266,6 @@ void insert_particle(mesh_t& m, species_t& sp, real_t x, real_t y, real_t z, aut
   sp.num_particles++;
 }
 
-
 /** 
  * @brief Initialize particle store based on simulation parameters (includes
  * injection)
@@ -334,11 +286,12 @@ void particle_initialization(mesh_t& m)
   real_t dy = Parameters::instance().dy;
   real_t dz = Parameters::instance().dz;
 
-  for ( auto sp : species ) {
-
+  for ( auto sp : species ) 
+  {
     logger << "Init particles... " << std::endl;
 
-    for ( auto c : m.cells() ) {
+    for ( auto c : m.cells() ) 
+    {
       auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
       auto coord = v->coordinates();
 
@@ -350,6 +303,7 @@ void particle_initialization(mesh_t& m)
 
       real_t z_min = coord[2] * dz;
       real_t z_max = z_min + dz;
+
       for (size_t i = 0; i < NPPC; i++)
       {
         real_t x = random_real( x_min, x_max );
@@ -360,7 +314,6 @@ void particle_initialization(mesh_t& m)
       }
     }
     logger << "Done particle init" << std::endl;
-
   }
 }
 
