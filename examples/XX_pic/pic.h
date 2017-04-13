@@ -52,19 +52,16 @@
 
 // Namespaces
 using namespace flecsi;
-//using namespace flecsi::data;
-using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
 // Type imports 
-using mesh_t = pic_mesh_t;
-using vertex_t = pic_types_t::vertex_t;
+using vertex_t = types::vertex_t;
 
 // Type implementations 
 using particle_list_t = particle_list_<real_t>;
 using species_t = species_<real_t>;
 using Parameters = flecsi::sp::pic::Parameters_<real_t>;
-using dim_array_t = flecsi::sp::dim_array_t;
+//using dim_array_t = flecsi::sp::dim_array_t;
 
 // Constants
 //#define AoS // TODO: Need other types
@@ -419,7 +416,7 @@ void field_solve(mesh_t& m, real_t dt)
       for (int i = 0; i < NX; i++) {
   */
 
-  for ( auto v : m.vertices(pic::interior) ) 
+  for ( auto v : m.vertices(interior) ) 
   {
 
     /* Convert this from 3d loop to flecsi loop
