@@ -12,7 +12,9 @@
 // Add support for multiple species
 // Add an automate-able validation 
 // Make the mesh stateful so I don't have to pass it around
-// Handle the situaton where a particle leaves it's voxel
+// Handle the situation where a particle leaves it's voxel
+// What level should we handle the species at?
+// Should the species level iterations be abstracted into a function 
 //
 ///////////////////////////// END TODO //////////////////////////////////
 
@@ -39,8 +41,9 @@
 // Files from flecsi-sp
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/entity_types.h>
-
-#include "boundary.h"
+#include <flecsi-sp/pic/simulation_parameters.h>
+#include <flecsi-sp/pic/boundary.h>
+#include <flecsi-sp/pic/species.h>
 
 // TODO: Move this out to a logger class/file
 #define ENABLE_DEBUG 1 
@@ -56,7 +59,10 @@ using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
-using particle_list_t = particle_list_<float>;
+using real_t = double;
+
+using particle_list_t = particle_list_<real_t>;
+using species_t = species_<real_t>;
 
 // Do this at the particle list block level
 //#define PARTICLE_LIST_SIZE 4 
@@ -65,7 +71,6 @@ using particle_list_t = particle_list_<float>;
 using mesh_t = pic_mesh_t;
 using vertex_t = pic_types_t::vertex_t;
 
-using real_t = double;
 
 // Constants
 //#define AoS // TODO: Need other types
@@ -75,42 +80,13 @@ using real_t = double;
 
 // Types
 using dim_array_t = std::array<real_t,NDIM>;
+using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 
-// TODO: This needs to be species local
-int num_particles = 0; 
 
-const real_t q = 1; // TODO: Give these values
-const real_t m = 1; // TODO: Give these values
-const real_t mu = 4.0 * M_PI * 1.0e-7; // permeability of free space
-const real_t c = 299792458; // Speed of light   
-const real_t eps = 1.0 / (c * c * mu); // permittivity of free space
-
-// TODO: Read input deck
-size_t NX_global = 64;
-size_t NY_global = 64;
-size_t NZ_global = 64;
-
-size_t nx = NX_global;
-size_t ny = NY_global;
-size_t nz = NZ_global;
-
-size_t NPPC = 32;
-double dt = 0.1; // TODO: units?
-int num_steps = 10;
-
-real_t len_x_global = 1.0;
-real_t len_y_global = 1.0;
-real_t len_z_global = 1.0;
-
-real_t len_x = len_x_global;
-real_t len_y = len_y_global;
-real_t len_z = len_z_global;
-
-real_t dx = len_x/nx;
-real_t dy = len_y/ny;
-real_t dz = len_z/nz;
 
 BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
+
+std::vector<species_t> species;
 
 ///////////////////// BEGIN METHODS ////////////////////////
 
@@ -164,7 +140,47 @@ void load_default_input_deck()
 void read_input_deck() 
 {
   // TODO: Empty.. for now...
-  // At some point this will read a JSON file (using a lib)
+  // At some point this will read a JSON file (using a lib)?
+  
+  const size_t default_num_cells = 64; 
+  const size_t default_ppc = 64; 
+  const real_t default_grid_len = 1.0;
+  real_t q = 1.0;
+  real_t m = 1.0;
+
+  size_t num_species = 2; 
+
+  for (size_t i = 0; i < num_species; i++) 
+  {
+    species.push_back( species_t(q,m) );
+  }
+
+
+  Parameters::instance().NX_global = default_num_cells;
+  Parameters::instance().NY_global = default_num_cells;
+  Parameters::instance().NZ_global = default_num_cells;
+
+  Parameters::instance().nx = default_num_cells;
+  Parameters::instance().nx = default_num_cells;
+  Parameters::instance().nx = default_num_cells;
+
+  Parameters::instance().NPPC = default_ppc;
+
+  Parameters::instance().dt = 0.1;
+
+  Parameters::instance().num_steps = 10;
+
+  Parameters::instance().len_x_global = default_grid_len;
+  Parameters::instance().len_y_global = default_grid_len;
+  Parameters::instance().len_x_global = default_grid_len;
+
+  Parameters::instance().len_x = default_grid_len;
+  Parameters::instance().len_y = default_grid_len;
+  Parameters::instance().len_z = default_grid_len;
+
+  Parameters::instance().dx = Parameters::instance().len_x / Parameters::instance().nx;
+  Parameters::instance().dy = Parameters::instance().len_y / Parameters::instance().ny;
+  Parameters::instance().dz = Parameters::instance().len_z / Parameters::instance().nz;
 }
 
 ///////////////// END INPUT DECK //////////////////
@@ -273,10 +289,10 @@ real_t init_particle_weight()
  * @param y Y coordinate of particle
  * @param z Z coordinate of particle
  */
-void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
+void insert_particle(mesh_t& m, species_t& sp, real_t x, real_t y, real_t z, auto c)
 {
-  // TODO: Implement this
-  //
+  
+  // TODO: Specify which species particle store
   auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
   auto& cell_particles = particles_accesor[c];
 
@@ -288,13 +304,13 @@ void insert_particle(mesh_t& m, real_t x, real_t y, real_t z, auto c)
 
   // TODO: set these
   int i; // implicit?
-  real_t w = init_particle_weight();
 
+  real_t w = init_particle_weight();
 
   cell_particles.add_particle(x, y, z, i, ux, uy, uz, w);
 
   // Update number of particles
-  num_particles++;
+  sp.num_particles++;
 }
 
 
@@ -312,30 +328,40 @@ void particle_initialization(mesh_t& m)
   // TODO: We would probably want to initialize srand at some point..
   //srand((unsigned)time(0)); 
 
-  logger << "Init particles... " << std::endl;
-  for ( auto c : m.cells() ) {
-    auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
-    auto coord = v->coordinates();
+  size_t NPPC = Parameters::instance().NPPC;
 
-    real_t x_min = coord[0] * dx;
-    real_t x_max = x_min + dx;
+  real_t dx = Parameters::instance().dx;
+  real_t dy = Parameters::instance().dy;
+  real_t dz = Parameters::instance().dz;
 
-    real_t y_min = coord[1] * dy;
-    real_t y_max = y_min + dy;
+  for ( auto sp : species ) {
 
-    real_t z_min = coord[2] * dz;
-    real_t z_max = z_min + dz;
-    for (size_t i = 0; i < NPPC; i++)
-    {
-      real_t x = random_real( x_min, x_max );
-      real_t y = random_real( y_min, y_max );
-      real_t z = random_real( z_min, z_max );
+    logger << "Init particles... " << std::endl;
 
-      insert_particle(m, x, y, z, c);
+    for ( auto c : m.cells() ) {
+      auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
+      auto coord = v->coordinates();
+
+      real_t x_min = coord[0] * dx;
+      real_t x_max = x_min + dx;
+
+      real_t y_min = coord[1] * dy;
+      real_t y_max = y_min + dy;
+
+      real_t z_min = coord[2] * dz;
+      real_t z_max = z_min + dz;
+      for (size_t i = 0; i < NPPC; i++)
+      {
+        real_t x = random_real( x_min, x_max );
+        real_t y = random_real( y_min, y_max );
+        real_t z = random_real( z_min, z_max );
+
+        insert_particle(m, sp, x, y, z, c);
+      }
     }
-  }
-  logger << "Done particle init" << std::endl;
+    logger << "Done particle init" << std::endl;
 
+  }
 }
 
 /** 
@@ -365,6 +391,7 @@ void init_simulation(mesh_t& m)
   // TODO: Am I going to get in trouble using a non-trivial type (has a pointer in)
     // I could hoist the array part of this to the code level
   register_data(m, particles, p, particle_list_t, dense, 1, cells);        
+  register_data(m, negative_particles, p, particle_list_t, dense, 1, cells);        
 
   // This may not actually be needed?
   // Initialize Array of Particles
@@ -419,6 +446,9 @@ void field_solve(mesh_t& m, real_t dt)
     // Bx = ((Ey - Ey) / dz - (Ez - Ez) / dy) * dt + Bx_-h
   
   // Note: Care needs to be taken as the sign changes from x to y to z 
+  //
+  const real_t mu = Parameters::instance().mu;
+  const real_t eps = Parameters::instance().eps;
   
   auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
   auto By = get_accessor(m, fields, by, double, dense, 0);                    
@@ -463,8 +493,13 @@ void field_solve(mesh_t& m, real_t dt)
     */
 
     // TODO: Ask Ben how best to deal with stenciling like this
-    auto width = ny;
-    auto depth = nz;
+    auto width = Parameters::instance().ny;
+    auto depth = Parameters::instance().nz;
+
+    real_t dx = Parameters::instance().dx;
+    real_t dy = Parameters::instance().dy;
+    real_t dz = Parameters::instance().dz;
+
     auto i = (1);
     auto j = (1*width);
     auto k = (1*width*depth);
@@ -498,7 +533,7 @@ void field_solve(mesh_t& m, real_t dt)
 /** 
  * @brief Particle mover 
  */
-void particle_move(mesh_t& m, real_t dt) { 
+void particle_move(mesh_t& m, species_t& sp, real_t dt) { 
 
   // mult by delta_t and divide by delta_x 
   // Swap in F/m = qE/m 
@@ -511,9 +546,10 @@ void particle_move(mesh_t& m, real_t dt) {
   // KE = m/2 * v_old * v_new 
   //
 
+  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+
   for ( auto c : m.cells() ) {
 
-    auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
     auto& cell_particles = particles_accesor[c];
 
     // TODO: Is there a way abstract this loop structure with the current particle structure 
@@ -578,6 +614,11 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
 // TODO: Document this
 dim_array_t interpolate_fields(mesh_t& m)
 {
+
+  real_t dx = Parameters::instance().dx;
+  real_t dy = Parameters::instance().dy;
+  real_t dz = Parameters::instance().dz;
+
   auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
   auto By = get_accessor(m, fields, by, double, dense, 0);                    
   auto Bz = get_accessor(m, fields, bz, double, dense, 0);                    
@@ -603,7 +644,7 @@ dim_array_t interpolate_fields(mesh_t& m)
  * @param mesh Mesh pointer
  * @param dt Time step to step by
  */
-void update_velocities(mesh_t& mesh, real_t dt) {
+void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
 
   auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
   auto By = get_accessor(mesh, fields, by, double, dense, 0);                    
@@ -613,7 +654,10 @@ void update_velocities(mesh_t& mesh, real_t dt) {
   auto Ey = get_accessor(mesh, fields, ey, double, dense, 0);                    
   auto Ez = get_accessor(mesh, fields, ez, double, dense, 0);                    
 
-  for (size_t i = 0; i < num_particles; i++)
+  real_t q = sp.q;
+  real_t m = sp.m;
+
+  for (size_t i = 0; i < sp.num_particles; i++)
   {
 
     int cell_index[3];
@@ -711,17 +755,24 @@ void update_velocities(mesh_t& mesh, real_t dt) {
 // TODO: Document this
 void particle_push(mesh_t& mesh) 
 {
-  update_velocities(mesh, dt);
-  particle_move(mesh, dt);
+  const real_t dt = Parameters::instance().dt;
+
+  for (auto sp : species)
+  {
+    update_velocities(mesh, sp, dt);
+    particle_move(mesh, sp, dt);
+  }
 }
 
 // TODO: Document this
 void fields_half(mesh_t& m) {
+  const real_t dt = Parameters::instance().dt;
   field_solve(m, dt);
 } 
 
 // TODO: Document this
 void fields_final(mesh_t& m) {
+  const real_t dt = Parameters::instance().dt;
   field_solve(m, dt);
 } 
 
@@ -799,8 +850,15 @@ void driver(int argc, char ** argv) {
     load_default_input_deck();
   }
 
+  const real_t dt = Parameters::instance().dt;
+  size_t num_steps = Parameters::instance().num_steps;
+
   // Init mesh
-  init_mesh(m, NX_global, NY_global, NZ_global);
+  init_mesh(
+      m, 
+      Parameters::instance().NX_global, 
+      Parameters::instance().NY_global, 
+      Parameters::instance().NZ_global);
 
   // Init Simulation (generic particles etc)
   init_simulation(m);
@@ -818,7 +876,11 @@ void driver(int argc, char ** argv) {
   */
 
   // Do an initial velocity move of dt/2 backwards to enable the leap frogging
-  update_velocities(m, -1 * (dt/2));
+  
+  for (auto sp : species) 
+  {
+    update_velocities(m, sp, -1 * (dt/2));
+  }
 
   // Perform main loop
   logger << "Starting Main Push" << std::endl;

@@ -9,7 +9,9 @@ set(pic_HEADERS
   mesh.h
   types.h
   particles.h
+  species.h
   boundary.h
+  simulation_parameters.h
   PARENT_SCOPE
 )
 

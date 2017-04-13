@@ -10,15 +10,27 @@ namespace flecsi {
                 public: 
 
                     // Species properties
-                    real_t charge;
-                    real_t weight;
+                    real_t q;
+                    real_t m;
+
+                    size_t num_particles;
+
+                    species_(real_t q_i, real_t m_i)
+                    {
+                        q = q_i;
+                        m = m_i;
+                    }
+
+                    species_(real_t q_i, real_t m_i, size_t num_particles_i)
+                    {
+                        q = q_i;
+                        m = m_i;
+                        num_particles = num_particles_i;
+                    }
             };
-
-
 
         } // namespace pic
     } // namespace sp
 } // namespace flecsi
 
 #endif // flecsi_sp_pic_species_h
-

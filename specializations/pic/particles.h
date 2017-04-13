@@ -36,7 +36,6 @@ namespace flecsi {
             { 
 
                 using particle_t = particle_<real_t>;
-
                 public:
                     /*
                     particle_list_() 

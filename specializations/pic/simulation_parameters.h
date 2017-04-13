@@ -56,6 +56,10 @@ namespace flecsi {
                     size_t NY_global = 64;
                     size_t NZ_global = 64;
 
+                    size_t nx = NX_global;
+                    size_t ny = NY_global;
+                    size_t nz = NZ_global;
+
                     size_t NPPC = 32;
 
                     double dt = 0.1; // TODO: units?
@@ -65,12 +69,13 @@ namespace flecsi {
                     real_t len_y_global = 1.0;
                     real_t len_z_global = 1.0;
 
-                    // TODO: Make a constructor which takes the required fields
-                    Parameters_(
-                            // args
-                            )  
-                    {
-                    }
+                    real_t len_x = len_x_global;
+                    real_t len_y = len_y_global;
+                    real_t len_z = len_z_global;
+
+                    real_t dx = len_x/nx;
+                    real_t dy = len_y/ny;
+                    real_t dz = len_z/nz;
             };
 
             //int Parameters_::instance2() { } 

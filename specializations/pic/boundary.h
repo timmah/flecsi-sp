@@ -51,7 +51,9 @@ namespace flecsi {
             };
 
 
-            template <class particle_list_t, class real_t> class ReflectiveBoundary : public BoundaryStrategy<particle_list_t, real_t>
+            template <class particle_list_t, class real_t> 
+                class ReflectiveBoundary : 
+                    public BoundaryStrategy<particle_list_t, real_t>
             {
                 //using typename BoundaryStrategy<real_t>::particle_t; 
 
