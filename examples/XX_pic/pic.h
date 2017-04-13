@@ -29,8 +29,7 @@
 #ifndef driver_h
 #define driver_h
 
-// TODO: Move this out to a logger class/file
-// Currently this should be above helpers.h
+// Currently this should be above helpers.h, but at some point should be cmake'd
 #define ENABLE_DEBUG 1 
 
 // Includes 
@@ -51,10 +50,9 @@
 #include <flecsi-sp/pic/boundary.h>
 #include <flecsi-sp/pic/species.h>
 
-
 // Namespaces
 using namespace flecsi;
-using namespace flecsi::data;
+//using namespace flecsi::data;
 using namespace flecsi::sp;
 using namespace flecsi::sp::pic;
 
