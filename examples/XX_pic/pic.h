@@ -61,7 +61,6 @@ using vertex_t = types::vertex_t;
 using particle_list_t = particle_list_<real_t>;
 using species_t = species_<real_t>;
 using Parameters = flecsi::sp::pic::Parameters_<real_t>;
-//using dim_array_t = flecsi::sp::dim_array_t;
 
 // Constants
 //#define AoS // TODO: Need other types
@@ -82,27 +81,19 @@ std::vector<species_t> species;
 // TODO: Move these to a class
 void load_default_input_deck()
 {
-  logger << "Importing Default Input Deck" << std::endl;
-}
 
-void read_input_deck() 
-{
-  // TODO: Empty.. for now...
-  // At some point this will read a JSON file (using a lib)?
-  
+  logger << "Importing Default Input Deck" << std::endl;
   const size_t default_num_cells = 64; 
-  const size_t default_ppc = 64; 
+  const size_t default_ppc = 4; 
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
 
-  size_t num_species = 2; 
+  size_t num_species = 1;
 
-  for (size_t i = 0; i < num_species; i++) 
-  {
-    species.push_back( species_t(q,m) );
-  }
-
+  // Two identical species 
+  species.push_back( species_t(q,m) );
+  //species.push_back( species_t(q,m) );
 
   Parameters::instance().NX_global = default_num_cells;
   Parameters::instance().NY_global = default_num_cells;
@@ -116,7 +107,7 @@ void read_input_deck()
 
   Parameters::instance().dt = 0.1;
 
-  Parameters::instance().num_steps = 10;
+  Parameters::instance().num_steps = 5;
 
   Parameters::instance().len_x_global = default_grid_len;
   Parameters::instance().len_y_global = default_grid_len;
@@ -224,9 +215,9 @@ std::array<real_t, 3> init_particle_velocity()
 }
 
 // TODO: Document this
-real_t init_particle_weight()
+real_t init_particle_weight(species_t& sp)
 {
-  // TODO: Implement this
+  return sp.m;
 }
 
 /** 
@@ -253,7 +244,7 @@ void insert_particle(mesh_t& m, species_t& sp, real_t x, real_t y, real_t z, aut
   // TODO: set these
   int i; // implicit?
 
-  real_t w = init_particle_weight();
+  real_t w = init_particle_weight(sp);
 
   cell_particles.add_particle(x, y, z, i, ux, uy, uz, w);
 
@@ -285,6 +276,7 @@ void particle_initialization(mesh_t& m)
   {
     logger << "Init particles... " << std::endl;
 
+    int pushed = 0;
     for ( auto c : m.cells() ) 
     {
       auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
@@ -306,9 +298,12 @@ void particle_initialization(mesh_t& m)
         real_t z = random_real( z_min, z_max );
 
         insert_particle(m, sp, x, y, z, c);
+        pushed++;
       }
     }
-    logger << "Done particle init" << std::endl;
+    logger << "Done particle init. Species now has " << sp.num_particles << " particles." << std::endl;
+    logger << "pushed " << pushed << std::endl;
+
   }
 }
 
@@ -591,7 +586,7 @@ dim_array_t interpolate_fields(mesh_t& m)
  * 
  * @param mesh Mesh pointer
  * @param dt Time step to step by
- */
+*/
 void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
 
   auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
@@ -605,7 +600,7 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
   real_t q = sp.q;
   real_t m = sp.m;
 
-  for (size_t i = 0; i < sp.num_particles; i++)
+  for (size_t p = 0; p < sp.num_particles; p++)
   {
 
     int cell_index[3];
@@ -696,6 +691,7 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
     }
 
     // TODO: Can hoist that q/m E dt/2?
+    // TODO : this doesn't actually set anyting right not?
 
   }
 }
@@ -788,15 +784,19 @@ void driver(int argc, char ** argv) {
   // Declare mesh
   mesh_t m;
 
-  bool load_input_deck = false;
-
-  if (load_input_deck) {
-    read_input_deck();
+  /*
+  // FIXME: Eventually this will read an actual input deck
+  bool read_deck = false;
+  if (read_deck) {
+    std::string file_name = "dummy.json"; // TODO: get this from args
+    read_input_deck(file_name);
   }
   else 
   {
     load_default_input_deck();
-  }
+  }*/
+
+  load_default_input_deck();
 
   const real_t dt = Parameters::instance().dt;
   size_t num_steps = Parameters::instance().num_steps;

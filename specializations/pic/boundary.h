@@ -6,11 +6,9 @@
 #ifndef flecsi_sp_pic_boundary_h
 #define flecsi_sp_pic_boundary_h
 
-
 namespace flecsi {
     namespace sp {
         namespace pic {
-
 
             // TODO: Do I need to make a distinction between "internal" and "physical"?
             // Assume everything is physical for now and trust in the flecsi magic for cell data?

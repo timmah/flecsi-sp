@@ -13,15 +13,9 @@ namespace flecsi {
                     real_t q;
                     real_t m;
 
-                    size_t num_particles;
+                    size_t num_particles = 0;
 
-                    species_(real_t q_i, real_t m_i)
-                    {
-                        q = q_i;
-                        m = m_i;
-                    }
-
-                    species_(real_t q_i, real_t m_i, size_t num_particles_i)
+                    species_(real_t q_i, real_t m_i, size_t num_particles_i = 0)
                     {
                         q = q_i;
                         m = m_i;
