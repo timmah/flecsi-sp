@@ -12,6 +12,7 @@ namespace flecsi {
                     // Species properties
                     real_t q;
                     real_t m;
+                    std::array<real_t, NDIM> initial_velocity;
                     size_t key;
 
                     size_t num_particles = 0;
@@ -21,6 +22,11 @@ namespace flecsi {
                         q = q_i;
                         m = m_i;
                         num_particles = num_particles_i;
+                    }
+
+                    void set_initial_velocity(real_t x, real_t y, real_t z)
+                    {
+                        initial_velocity = { x, y, z };
                     }
             };
 

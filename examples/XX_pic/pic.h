@@ -102,6 +102,9 @@ void load_default_input_deck()
   species.push_back( species_t(q,m) );
   species.push_back( species_t(q,m) );
 
+  species[0].set_initial_velocity(0,1,0);
+  species[1].set_initial_velocity(0,-1,0);
+
   Parameters::instance().NX_global = default_num_cells;
   Parameters::instance().NY_global = default_num_cells;
   Parameters::instance().NZ_global = default_num_cells;
@@ -216,9 +219,9 @@ void field_initialization(mesh_t& m)
 }
 
 // TODO: Document this
-std::array<real_t, 3> init_particle_velocity()
+std::array<real_t, 3> init_particle_velocity(species_t& sp)
 {
-  // TODO: Implement this
+  return sp.initial_velocity;
 }
 
 // TODO: Document this
@@ -241,7 +244,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
   // TODO: Specify which species particle store
   auto& cell_particles = particles_accesor[c];
 
-  std::array<real_t,3> velocity = init_particle_velocity();
+  std::array<real_t,3> velocity = init_particle_velocity(sp);
 
   real_t ux = velocity[0]; 
   real_t uy = velocity[1];
@@ -259,6 +262,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
 }
 
 
+// This is kind of horrible, I know..
 auto get_particle_accessor(mesh_t& m, size_t species_key)
 {
   if (species_key == Species_Keys::ELECTRON)
