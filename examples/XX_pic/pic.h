@@ -8,15 +8,18 @@
 // Particle shape?
 // boundary style things? periodic? 
 // data layout? method to load particle properties? Not married to AoS?
-// replace all locals (eg nx) with assignment _globals (eg NX_global)
-// Add support for multiple species
-// Add an automate-able validation 
-// Make the mesh stateful so I don't have to pass it around
-// Handle the situation where a particle leaves it's voxel
+// Make the mesh stateful so I don't have to pass it around?
+// Handle the situation where a particle leaves it's current voxel
 // What level should we handle the species at?
 // Should the species level iterations be abstracted into a function 
+// How to associate flecsi data with each species?
 //
 ///////////////////////////// END TODO //////////////////////////////////
+
+// Next steps (once key todos are done):
+// Add an automate-able validation 
+// Input deck?
+
 
 /////////// PARTICLES //////////////
 //
@@ -74,6 +77,10 @@ using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
 std::vector<species_t> species;
 
+enum Species_Keys {
+  ELECTRON, NEGATIVE
+};
+
 ///////////////////// BEGIN METHODS ////////////////////////
 
 ////////////////////// INPUT DECK //////////////////
@@ -89,11 +96,11 @@ void load_default_input_deck()
   real_t q = 1.0;
   real_t m = 1.0;
 
-  size_t num_species = 1;
+  size_t num_species = 2;
 
   // Two identical species 
   species.push_back( species_t(q,m) );
-  //species.push_back( species_t(q,m) );
+  species.push_back( species_t(q,m) );
 
   Parameters::instance().NX_global = default_num_cells;
   Parameters::instance().NY_global = default_num_cells;
@@ -228,11 +235,10 @@ real_t init_particle_weight(species_t& sp)
  * @param y Y coordinate of particle
  * @param z Z coordinate of particle
  */
-void insert_particle(mesh_t& m, species_t& sp, real_t x, real_t y, real_t z, auto c)
+void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x, real_t y, real_t z, auto c)
 {
   
   // TODO: Specify which species particle store
-  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
   auto& cell_particles = particles_accesor[c];
 
   std::array<real_t,3> velocity = init_particle_velocity();
@@ -250,6 +256,18 @@ void insert_particle(mesh_t& m, species_t& sp, real_t x, real_t y, real_t z, aut
 
   // Update number of particles
   sp.num_particles++;
+}
+
+
+auto get_particle_accessor(mesh_t& m, size_t species_key)
+{
+  if (species_key == Species_Keys::ELECTRON)
+  {
+    return get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  }
+  else {
+    return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);                    
+  }
 }
 
 /** 
@@ -272,11 +290,12 @@ void particle_initialization(mesh_t& m)
   real_t dy = Parameters::instance().dy;
   real_t dz = Parameters::instance().dz;
 
-  for ( auto sp : species ) 
+  for ( auto& sp : species ) 
   {
     logger << "Init particles... " << std::endl;
 
-    int pushed = 0;
+    auto particles_accesor = get_particle_accessor(m, sp.key); //get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+
     for ( auto c : m.cells() ) 
     {
       auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
@@ -297,12 +316,10 @@ void particle_initialization(mesh_t& m)
         real_t y = random_real( y_min, y_max );
         real_t z = random_real( z_min, z_max );
 
-        insert_particle(m, sp, x, y, z, c);
-        pushed++;
+        insert_particle(m, sp, particles_accesor, x, y, z, c);
       }
     }
     logger << "Done particle init. Species now has " << sp.num_particles << " particles." << std::endl;
-    logger << "pushed " << pushed << std::endl;
 
   }
 }
@@ -489,7 +506,8 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
   // KE = m/2 * v_old * v_new 
   //
 
-  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  auto particles_accesor = get_particle_accessor(m, sp.key); 
 
   for ( auto c : m.cells() ) {
 

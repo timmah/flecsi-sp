@@ -12,6 +12,7 @@ namespace flecsi {
                     // Species properties
                     real_t q;
                     real_t m;
+                    size_t key;
 
                     size_t num_particles = 0;
 
