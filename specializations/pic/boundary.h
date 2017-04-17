@@ -58,13 +58,13 @@ namespace flecsi {
                 // TODO: What data interface does this need? 
                 // Is just the particle information sufficient to decide where to send it next ?
                 // Is this more complex than it initially seems given you may have to
-                // "move()" the particle if it does something like bound off?  
+                // "move()" the particle if it does something like bound off?
                 // It could take the object and directly query the data, or we could try pass the Particle to it?
                 // Passing a particle would marry us to a data layout of AoS..
-                
+
                 inline int process_particle(
-                        particle_list_t& p, 
-                        size_t i, 
+                        particle_list_t& p,
+                        size_t i,
                         size_t v
                 ) final
                 {
@@ -78,18 +78,18 @@ namespace flecsi {
                     real_t ux = p.get_ux(i, v);
                     real_t uy = p.get_uy(i, v);
                     real_t uz = p.get_uz(i, v);
-                    
-                    // Invert velocity 
+
+                    // Invert velocity
                     ux *= -1;
                     uy *= -1;
                     uz *= -1;
 
                     // Change position after bounding on boundary
-                    
+
                     // TODO: This needs to know the boundary position and
                         // therefor may need additional data?
                     // TODO: This also needs to know how to move the particles, which may mean we dulicate code/logic
-                        // We could already assume it got moved? 
+                        // We could already assume it got moved?
                         // If {xyz} are relative, it would just be 1-that?
                     x = local_cell_max - x;
                     y = local_cell_max - y;
@@ -103,7 +103,6 @@ namespace flecsi {
                     p.set_uy(uy, i, v);
                     p.set_uz(uz, i, v);
                 }
-            
             };
 
             /*

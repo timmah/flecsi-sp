@@ -142,11 +142,11 @@ namespace flecsi {
       using id_t = size_t;
       using real_t = pic_config_t::real_t;
 
-      real_t dx, dy, dz; 
-      real_t ux, uy, uz; 
+      real_t dx, dy, dz;
+      real_t ux, uy, uz;
 
-      real_t w;          
-      int32_t i;        
+      real_t w;
+      int32_t i;
       }; // particle_t
 
 */

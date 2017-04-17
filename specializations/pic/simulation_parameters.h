@@ -29,7 +29,7 @@ namespace flecsi {
                         static Parameters_ instance_;
                         return instance_;
                     }
-                    
+
                     /*
                     // Design patterns book way (favoring lazy initialization)
                     static Parameters_* instance_;

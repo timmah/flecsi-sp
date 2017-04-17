@@ -201,30 +201,59 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
  * 
  * @param m The mesh which contains the fields
  */
-// TODO: Implement this
 void field_initialization(mesh_t& m)
 {
   // Experiment with data
-  auto jx = get_accessor(m, fields, jx, double, dense, 0);                    
-                                                                                     
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);
+  auto By = get_accessor(m, fields, by, double, dense, 0);
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);
+
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);
+
+  auto Jx = get_accessor(m, fields, jx, double, dense, 0);
+  auto Jy = get_accessor(m, fields, jy, double, dense, 0);
+  auto Jz = get_accessor(m, fields, jz, double, dense, 0);
+
   // Example of how to iterate vertices from cells
   for ( auto c : m.cells() )
   {
-    //std::cout << "Volume " << c->volume() << std::endl;
     for ( auto v : m.vertices(c) ) {
-      //std::cout << v->coordinates() << std::endl;                                    
-      jx[v] = 1.0;
+      Bx[v] = 0.0;
+      By[v] = 0.0;
+      Bz[v] = 0.0;
+
+      Ex[v] = 0.0;
+      Ey[v] = 0.0;
+      Ez[v] = 0.0;
+
+      Jx[v] = 0.0;
+      Jy[v] = 0.0;
+      Jz[v] = 0.0;
     }
   }
 }
 
-// TODO: Document this
+/** 
+ * @brief Function to query species for appropriate initial velocity values
+ * 
+ * @param sp The current species
+ * 
+ * @return An array of reals containing the x/y/z velocities
+ */
 std::array<real_t, 3> init_particle_velocity(species_t& sp)
 {
   return sp.initial_velocity;
 }
 
-// TODO: Document this
+/** 
+ * @brief Function to query species for appropriate initial weight value 
+ *
+ * @param sp The species
+ * 
+ * @return A real representation of the weight 
+ */
 real_t init_particle_weight(species_t& sp)
 {
   return sp.m;
@@ -241,7 +270,6 @@ real_t init_particle_weight(species_t& sp)
 void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x, real_t y, real_t z, auto c)
 {
   
-  // TODO: Specify which species particle store
   auto& cell_particles = particles_accesor[c];
 
   std::array<real_t,3> velocity = init_particle_velocity(sp);
@@ -250,7 +278,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
   real_t uy = velocity[1];
   real_t uz = velocity[2];
 
-  // TODO: set these
+  // TODO: set this
   int i; // implicit?
 
   real_t w = init_particle_weight(sp);
@@ -267,10 +295,10 @@ auto get_particle_accessor(mesh_t& m, size_t species_key)
 {
   if (species_key == Species_Keys::ELECTRON)
   {
-    return get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+    return get_accessor(m, particles, p, particle_list_t, dense, 0);
   }
   else {
-    return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);                    
+    return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);
   }
 }
 
@@ -298,7 +326,7 @@ void particle_initialization(mesh_t& m)
   {
     logger << "Init particles... " << std::endl;
 
-    auto particles_accesor = get_particle_accessor(m, sp.key); //get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+    auto particles_accesor = get_particle_accessor(m, sp.key); 
 
     for ( auto c : m.cells() ) 
     {
@@ -336,7 +364,7 @@ void particle_initialization(mesh_t& m)
  */
 void init_simulation(mesh_t& m) 
 {
-  // TODO: Much of this can be pushed into the specialization 
+  // TODO: Much of this can be pushed into the specialization ?
   
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
@@ -445,7 +473,6 @@ void field_solve(mesh_t& m, real_t dt)
         Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy - 
             (Ey[k][j+1][i] - Ey[k][j][i]) / dx );
 
-        // TODO: Check these indexs
         Ex[k][j][i] = ( (1/(mu*eps)) * ( ((Bz[k][j][i] - Bz[k][j-1][i] ) / dy ) +
               ((By[k][j][i] - By[k][j][i-1]) / dz)) + Jx[k][j][i]) * dt + Ex[k][j][i];
 
@@ -456,7 +483,6 @@ void field_solve(mesh_t& m, real_t dt)
               ((Bx[k][j][i] - Bx[k][j][i-1]) / dy)) + Jz[k][j][i]) * dt + Ez[k][j][i];
     */
 
-    // TODO: Ask Ben how best to deal with stenciling like this
     auto width = Parameters::instance().ny;
     auto depth = Parameters::instance().nz;
 
@@ -577,7 +603,12 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
 
 
 // TODO: Document this
-dim_array_t interpolate_fields(mesh_t& m)
+/** 
+ * @brief Function to perform field interpolation calculation
+ * 
+ * @param m The mesh object
+ */
+void interpolate_fields(mesh_t& m)
 {
 
   real_t dx = Parameters::instance().dx;
@@ -609,7 +640,11 @@ dim_array_t interpolate_fields(mesh_t& m)
  * @param mesh Mesh pointer
  * @param dt Time step to step by
 */
-void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
+void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) 
+{
+
+  // TODO: This could loop over cells 
+  // TODO: We never actually use the calculated value from this function
 
   auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
   auto By = get_accessor(mesh, fields, by, double, dense, 0);                    
@@ -622,99 +657,123 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) {
   real_t q = sp.q;
   real_t m = sp.m;
 
-  for (size_t p = 0; p < sp.num_particles; p++)
+  auto particles_accesor = get_particle_accessor(mesh, sp.key); 
+
+  for ( auto c : mesh.cells() ) 
   {
+    auto& cell_particles = particles_accesor[c];
 
-    int cell_index[3];
-    cell_index[0] = 1; // TODO: Set this based on particle properties
-    cell_index[1] = 1; // TODO: Set this
-    cell_index[2] = 1; // TODO: Set this
-
-    dim_array_t E;
-    dim_array_t B;
-
-    // TODO: This should interpolate based on particle shape 
-    E[0] = Ex[ cell_index[0] ];
-    E[1] = Ey[ cell_index[1] ];
-    E[2] = Ez[ cell_index[2] ];
-
-    B[0] = Bx[ cell_index[0] ];
-    B[1] = By[ cell_index[1] ];
-    B[2] = Bz[ cell_index[2] ];
-
-    // Use the Boris method to update the velocity and rotate (P62 in Birdsall) 
-    // Example of this can also be found here 
-    // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java 
-
-    // Equations:
-
-    // v_old = v- - qE/m * delta_t / 2
-    // => v- = v + qE/m * delta_t / 2
-
-    // v_new = v+ + qE/m * delta_t / 2
-
-    // v' = v- + v- X t 
-    // v+ = v- + v' X s 
-
-    // |v-|^2 = |v+|^2
-    // s = 2t / (1+t^2) 
-    // t = qB /m * delta_t / 2 
-    //
-    // TODO: move these data declarations
-    dim_array_t t;
-    dim_array_t v;
-    dim_array_t s;
-    dim_array_t v_plus;
-    dim_array_t v_minus;
-    dim_array_t v_prime;
-
-    // TODO: give E/B a value 
-    // TODO: make this do multiple particles..
-
-    real_t t_squared = 0.0;
-
-    // Calculate t and |t^2|
-    for (size_t i = 0; i < NDIM; i++) 
+    for (size_t i = 0; i < cell_particles.block_number+1; i++)
     {
-      t[i] = q/m * B[i] * 0.5 * dt;
-      t_squared += t[i]*t[i];
+
+      // TODO: Do we want to explicitly implement a way to go from particle->cell?
+      // TODO: Set these based on particle properties
+      int cell_index[3];
+      cell_index[0] = 1; 
+      cell_index[1] = 1; 
+      cell_index[2] = 1; 
+
+      dim_array_t E;
+      dim_array_t B;
+
+      // TODO: Can hoist that q/m E dt/2?
+      //
+      // TODO: This should interpolate based on particle shape and a function call
+      E[0] = Ex[ cell_index[0] ];
+      E[1] = Ey[ cell_index[1] ];
+      E[2] = Ez[ cell_index[2] ];
+
+      B[0] = Bx[ cell_index[0] ];
+      B[1] = By[ cell_index[1] ];
+      B[2] = Bz[ cell_index[2] ];
+
+      for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+      {
+        // Use the Boris method to update the velocity and rotate (P62 in Birdsall) 
+        // Example of this can also be found here 
+        // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java 
+
+        // Equations:
+
+        // v_old = v- - qE/m * delta_t / 2
+        // => v- = v + qE/m * delta_t / 2
+
+        // v_new = v+ + qE/m * delta_t / 2
+
+        // v' = v- + v- X t 
+        // v+ = v- + v' X s 
+
+        // |v-|^2 = |v+|^2
+        // s = 2t / (1+t^2) 
+        // t = qB /m * delta_t / 2 
+        //
+        // TODO: move these data declarations
+        dim_array_t t;
+        dim_array_t velocity;
+        dim_array_t s;
+        dim_array_t v_plus;
+        dim_array_t v_minus;
+        dim_array_t v_prime;
+
+        real_t t_squared = 0.0;
+
+        real_t ux = cell_particles.get_ux(i, v);
+        real_t uy = cell_particles.get_uy(i, v);
+        real_t uz = cell_particles.get_uz(i, v);
+
+        velocity[0] = ux;
+        velocity[1] = uy;
+        velocity[2] = uz;
+
+        // Calculate t and |t^2|
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          t[i] = q/m * B[i] * 0.5 * dt;
+          t_squared += t[i]*t[i];
+        }
+
+        // Calculate s
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          s[i] = 2*t[i] / (1+t_squared);
+        }
+
+        // Calculate v-
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          v_minus[i] = velocity[i] + q/m * E[i] * 0.5 * dt;
+        }
+
+        // Calculate v'
+        dim_array_t vt_cross_product = cross_product( v_minus, t);
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          v_prime[i] = v_minus[i] + vt_cross_product[i];
+        }
+
+        // Calculate v+
+        dim_array_t vs_cross_product = cross_product( v_prime, s);
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          v_plus[i] = v_minus[i] + vs_cross_product[i];
+        }
+
+        // Calculate v_new
+        for (size_t i = 0; i < NDIM; i++) 
+        {
+          velocity[i] = v_plus[i] + q/m * E[i] * 0.5 * dt;
+        }
+
+        ux = velocity[0];
+        uy = velocity[1];
+        uz = velocity[2];
+
+        cell_particles.set_ux(i, v, ux);
+        cell_particles.set_uy(i, v, uy);
+        cell_particles.set_uz(i, v, uz);
+
+      }
     }
-
-    // Calculate s
-    for (size_t i = 0; i < NDIM; i++) 
-    {
-      s[i] = 2*t[i] / (1+t_squared);
-    }
-
-    // Calculate v-
-    for (size_t i = 0; i < NDIM; i++) 
-    {
-      v_minus[i] = v[i] + q/m * E[i] * 0.5 * dt;
-    }
-
-    // Calculate v'
-    dim_array_t vt_cross_product = cross_product( v_minus, t);
-    for (size_t i = 0; i < NDIM; i++) 
-    {
-      v_prime[i] = v_minus[i] + vt_cross_product[i];
-    }
-
-    // Calculate v+
-    dim_array_t vs_cross_product = cross_product( v_prime, s);
-    for (size_t i = 0; i < NDIM; i++) 
-    {
-      v_plus[i] = v_minus[i] + vs_cross_product[i];
-    }
-
-    // Calculate v_new
-    for (size_t i = 0; i < NDIM; i++) 
-    {
-      v[i] = v_plus[i] + q/m * E[i] * 0.5 * dt;
-    }
-
-    // TODO: Can hoist that q/m E dt/2?
-    // TODO : this doesn't actually set anyting right not?
-
   }
 }
 
