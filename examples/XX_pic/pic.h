@@ -6,18 +6,18 @@
 ///////////////////////////// TODO //////////////////////////////////
 //
 // Particle shape?
-// boundary style things? periodic? 
+// boundary style things? periodic?
 // data layout? method to load particle properties? Not married to AoS?
 // Make the mesh stateful so I don't have to pass it around?
 // Handle the situation where a particle leaves it's current voxel
 // What level should we handle the species at?
-// Should the species level iterations be abstracted into a function 
+// Should the species level iterations be abstracted into a function
 // How to associate flecsi data with each species?
 //
 ///////////////////////////// END TODO //////////////////////////////////
 
 // Next steps (once key todos are done):
-// Add an automate-able validation 
+// Add an automate-able validation
 // Input deck?
 
 
@@ -26,16 +26,16 @@
 // Flecsi does *not* currently support a sensible mechanism for "an array of
 // particles", so instead we will associate an array with a cell, and hope to
 // always have room in that cell..
-// 
+//
 ///////////////////////////////////
 
 #ifndef driver_h
 #define driver_h
 
 // Currently this should be above helpers.h, but at some point should be cmake'd
-#define ENABLE_DEBUG 1 
+#define ENABLE_DEBUG 1
 
-// Includes 
+// Includes
 #include <iostream>
 #include <iomanip>
 
@@ -57,10 +57,10 @@
 using namespace flecsi;
 using namespace flecsi::sp::pic;
 
-// Type imports 
+// Type imports
 using vertex_t = types::vertex_t;
 
-// Type implementations 
+// Type implementations
 using particle_list_t = particle_list_<real_t>;
 using species_t = species_<real_t>;
 using Parameters = flecsi::sp::pic::Parameters_<real_t>;
@@ -70,10 +70,10 @@ using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 // TODO: Read NDIM from flecsi class and consolidate the two variables?
 
 // Do this at the particle list block level
-//#define PARTICLE_LIST_SIZE 4 
+//#define PARTICLE_LIST_SIZE 4
 //using particle_list_array_t = particle_list_t[PARTICLE_LIST_SIZE];
 
-// TODO: find somewhere nice to store these global simulation properties? 
+// TODO: find somewhere nice to store these global simulation properties?
 BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
 std::vector<species_t> species;
 
@@ -90,15 +90,15 @@ void load_default_input_deck()
 {
 
   logger << "Importing Default Input Deck" << std::endl;
-  const size_t default_num_cells = 64; 
-  const size_t default_ppc = 4; 
+  const size_t default_num_cells = 64;
+  const size_t default_ppc = 4;
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
 
   size_t num_species = 2;
 
-  // Two identical species 
+  // Two identical species
   species.push_back( species_t(q,m) );
   species.push_back( species_t(q,m) );
 
@@ -134,16 +134,16 @@ void load_default_input_deck()
 
 ///////////////// END INPUT DECK //////////////////
 
-/** 
+/**
  * @brief Function to initialize mesh. It builds a regular of the desired size,
  * creating cells and verticies
- * 
+ *
  * @param m Mesh to add data to
  * @param nx Size in x direction (# of cells)
  * @param ny Size in y direction (# of cells)
  * @param nz Size in z direction (# of cells)
  */
-void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz) 
+void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
 {
 
   std::vector<vertex_t *> vs;
@@ -152,8 +152,8 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
     for(size_t j(0); j<ny+1; ++j) {
       for(size_t i(0); i<nx+1; ++i) {
 
-        bool is_domain_boundary = i==0 || j==0 || i==(nx) || j==(ny) || 
-          k == 0 || k == (nz); 
+        bool is_domain_boundary = i==0 || j==0 || i==(nx) || j==(ny) ||
+          k == 0 || k == (nz);
 
         vs.push_back(
               m.make_vertex({double(i), double(j), double(k)},
@@ -171,19 +171,19 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
     for(size_t j(0); j<ny; ++j) { // y
       for(size_t i(0); i<nx; ++i) { // x
 
-        bool is_domain_boundary = i==0 || j==0 || i==(nx-1) || j==(ny-1) || 
-          k == 0 || k == (nz-1); 
+        bool is_domain_boundary = i==0 || j==0 || i==(nx-1) || j==(ny-1) ||
+          k == 0 || k == (nz-1);
 
         // Indexing x + y*WIDTH + Z*WIDTH*DEPTH
         m.make_cell({
-            vs[ (k    *width*depth) + (j    *width) + i ], // {0, 0, 0} 
-            vs[ (k    *width*depth) + (j    *width) + (i+1) ], // {0, 0, 1} 
-            vs[ (k    *width*depth) + ((j+1)*width) + (i+1) ], // {0, 1, 1} 
-            vs[ (k    *width*depth) + ((j+1)*width) + i ], // {0, 1, 0} 
-            vs[ ((k+1)*width*depth) + ((j+1)*width) + i ], // {1, 1, 0} 
-            vs[ ((k+1)*width*depth) + (j    *width) + i ], // {1, 0, 0} 
-            vs[ ((k+1)*width*depth) + (j    *width) + (i+1) ], // {1, 0, 1} 
-            vs[ ((k+1)*width*depth) + ((j+1)*width) + (i+1) ], // {1, 1, 1} 
+            vs[ (k    *width*depth) + (j    *width) + i ], // {0, 0, 0}
+            vs[ (k    *width*depth) + (j    *width) + (i+1) ], // {0, 0, 1}
+            vs[ (k    *width*depth) + ((j+1)*width) + (i+1) ], // {0, 1, 1}
+            vs[ (k    *width*depth) + ((j+1)*width) + i ], // {0, 1, 0}
+            vs[ ((k+1)*width*depth) + ((j+1)*width) + i ], // {1, 1, 0}
+            vs[ ((k+1)*width*depth) + (j    *width) + i ], // {1, 0, 0}
+            vs[ ((k+1)*width*depth) + (j    *width) + (i+1) ], // {1, 0, 1}
+            vs[ ((k+1)*width*depth) + ((j+1)*width) + (i+1) ], // {1, 1, 1}
             }, is_domain_boundary ? entity_type_t::domain_boundary :
             entity_type_t::unknown
         );
@@ -196,9 +196,9 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
 
 
 
-/** 
+/**
  * @brief Initialize electric and magnetic fields.
- * 
+ *
  * @param m The mesh which contains the fields
  */
 void field_initialization(mesh_t& m)
@@ -235,11 +235,11 @@ void field_initialization(mesh_t& m)
   }
 }
 
-/** 
+/**
  * @brief Function to query species for appropriate initial velocity values
- * 
+ *
  * @param sp The current species
- * 
+ *
  * @return An array of reals containing the x/y/z velocities
  */
 std::array<real_t, 3> init_particle_velocity(species_t& sp)
@@ -247,21 +247,21 @@ std::array<real_t, 3> init_particle_velocity(species_t& sp)
   return sp.initial_velocity;
 }
 
-/** 
- * @brief Function to query species for appropriate initial weight value 
+/**
+ * @brief Function to query species for appropriate initial weight value
  *
  * @param sp The species
- * 
- * @return A real representation of the weight 
+ *
+ * @return A real representation of the weight
  */
 real_t init_particle_weight(species_t& sp)
 {
   return sp.m;
 }
 
-/** 
+/**
  * @brief Function to insert particle into particle store at {x,y,z}
- * 
+ *
  * @param m Mesh to associate particle with (may get depreciateD)
  * @param x X coordinate of particle
  * @param y Y coordinate of particle
@@ -269,12 +269,12 @@ real_t init_particle_weight(species_t& sp)
  */
 void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x, real_t y, real_t z, auto c)
 {
-  
+
   auto& cell_particles = particles_accesor[c];
 
   std::array<real_t,3> velocity = init_particle_velocity(sp);
 
-  real_t ux = velocity[0]; 
+  real_t ux = velocity[0];
   real_t uy = velocity[1];
   real_t uz = velocity[2];
 
@@ -302,19 +302,19 @@ auto get_particle_accessor(mesh_t& m, size_t species_key)
   }
 }
 
-/** 
+/**
  * @brief Initialize particle store based on simulation parameters (includes
  * injection)
  *
- * This currently injects NPPC * nx * ny * nz particles randomly 
- * 
+ * This currently injects NPPC * nx * ny * nz particles randomly
+ *
  * @param m Mesh pointer to work on
  */
-void particle_initialization(mesh_t& m) 
+void particle_initialization(mesh_t& m)
 {
 
   // TODO: We would probably want to initialize srand at some point..
-  //srand((unsigned)time(0)); 
+  //srand((unsigned)time(0));
 
   size_t NPPC = Parameters::instance().NPPC;
 
@@ -322,13 +322,13 @@ void particle_initialization(mesh_t& m)
   real_t dy = Parameters::instance().dy;
   real_t dz = Parameters::instance().dz;
 
-  for ( auto& sp : species ) 
+  for ( auto& sp : species )
   {
     logger << "Init particles... " << std::endl;
 
-    auto particles_accesor = get_particle_accessor(m, sp.key); 
+    auto particles_accesor = get_particle_accessor(m, sp.key);
 
-    for ( auto c : m.cells() ) 
+    for ( auto c : m.cells() )
     {
       auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
       auto coord = v->coordinates();
@@ -356,41 +356,41 @@ void particle_initialization(mesh_t& m)
   }
 }
 
-/** 
+/**
  * @brief General function to initialize simulation. It sets up general data,
  * and inits particles and fields
- * 
- * @param m Mesh handle 
+ *
+ * @param m Mesh handle
  */
-void init_simulation(mesh_t& m) 
+void init_simulation(mesh_t& m)
 {
   // TODO: Much of this can be pushed into the specialization ?
-  
+
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
-  register_data(m, fields, jx, double, dense, 1, vertices);        
-  register_data(m, fields, jy, double, dense, 1, vertices);        
-  register_data(m, fields, jz, double, dense, 1, vertices);        
+  register_data(m, fields, jx, double, dense, 1, vertices);
+  register_data(m, fields, jy, double, dense, 1, vertices);
+  register_data(m, fields, jz, double, dense, 1, vertices);
 
-  register_data(m, fields, ex, double, dense, 1, vertices);        
-  register_data(m, fields, ey, double, dense, 1, vertices);        
-  register_data(m, fields, ez, double, dense, 1, vertices);        
+  register_data(m, fields, ex, double, dense, 1, vertices);
+  register_data(m, fields, ey, double, dense, 1, vertices);
+  register_data(m, fields, ez, double, dense, 1, vertices);
 
-  register_data(m, fields, bx, double, dense, 1, vertices);        
-  register_data(m, fields, by, double, dense, 1, vertices);        
-  register_data(m, fields, bz, double, dense, 1, vertices);        
+  register_data(m, fields, bx, double, dense, 1, vertices);
+  register_data(m, fields, by, double, dense, 1, vertices);
+  register_data(m, fields, bz, double, dense, 1, vertices);
 
   // TODO: Am I going to get in trouble using a non-trivial type (has a pointer in)
     // I could hoist the array part of this to the code level
-  register_data(m, particles, p, particle_list_t, dense, 1, cells);        
-  register_data(m, negative_particles, p, particle_list_t, dense, 1, cells);        
+  register_data(m, particles, p, particle_list_t, dense, 1, cells);
+  register_data(m, negative_particles, p, particle_list_t, dense, 1, cells);
 
   // This may not actually be needed?
   // Initialize Array of Particles
-  
+
   // Do this init in the constructor
   /*
-  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
+  auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);
   for ( auto c : m.cells() )
   {
     auto cell_particles = particles_accesor;
@@ -399,60 +399,59 @@ void init_simulation(mesh_t& m)
     //cell_particles[i] = new particle_list_t();
   }
   */
-  
 
   field_initialization(m);
   particle_initialization(m);
 }
 
 
-/** 
+/**
  * @brief Generic field solver implementing Yee grid method outlined in:
  *
  * Numerical solution of initial boundary value problems involving Maxwell's
  * equations in isotropic media, Yee
- * 
- * @param m Mesh pointer 
+ *
+ * @param m Mesh pointer
  * @param dt Time delta to step solver by
  */
-void field_solve(mesh_t& m, real_t dt) 
+void field_solve(mesh_t& m, real_t dt)
 {
-  
+
   // TODO: Double check these are the right values for EM (not ES)
 
   // General Idea, taken directly from _the_ Yee paper
   //
-  // Electric Field 
+  // Electric Field
     //  Take equation for D
-    //  Dx_n - Dx_n-1 / dt = (Hz - Hz) / dy - (hy - hy) / dz + Jx 
+    //  Dx_n - Dx_n-1 / dt = (Hz - Hz) / dy - (hy - hy) / dz + Jx
     //  Rearrange:
     //  Dx_n = ((Hz - Hz) / dy - (hy - hy) / dz + Jx) *dt + Dx_n-1
     //  Swap out D and B:
     //  eps*Ex_n = ( 1/mu * ((Bz - Bz) / dy - (By - By) / dz) + Jx) * dt + eps*Ex_n-1
     //  Alternatively:
     //  Ex_n = (( 1/mu * ((Bz - Bz) / dy - (By - By) / dz) + Jx) * dt)/eps + Ex_n-1
-    
-  // Magnetic Field 
+
+  // Magnetic Field
     // (Bx_h - Bx_-h) / dt  = (Ey - Ey) / dz - (Ez - Ez) / dy
     // Rearrange:
     // Bx = ((Ey - Ey) / dz - (Ez - Ez) / dy) * dt + Bx_-h
-  
-  // Note: Care needs to be taken as the sign changes from x to y to z 
+
+  // Note: Care needs to be taken as the sign changes from x to y to z
   //
   const real_t mu = Parameters::instance().mu;
   const real_t eps = Parameters::instance().eps;
-  
-  auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
-  auto By = get_accessor(m, fields, by, double, dense, 0);                    
-  auto Bz = get_accessor(m, fields, bz, double, dense, 0);                    
 
-  auto Ex = get_accessor(m, fields, ex, double, dense, 0);                    
-  auto Ey = get_accessor(m, fields, ey, double, dense, 0);                    
-  auto Ez = get_accessor(m, fields, ez, double, dense, 0);                    
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);
+  auto By = get_accessor(m, fields, by, double, dense, 0);
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);
 
-  auto Jx = get_accessor(m, fields, jx, double, dense, 0);                    
-  auto Jy = get_accessor(m, fields, jy, double, dense, 0);                    
-  auto Jz = get_accessor(m, fields, jz, double, dense, 0);                    
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);
+
+  auto Jx = get_accessor(m, fields, jx, double, dense, 0);
+  auto Jy = get_accessor(m, fields, jy, double, dense, 0);
+  auto Jz = get_accessor(m, fields, jz, double, dense, 0);
 
   /* Convert this from 3d loop to flecsi loop
   for (int k = 0; k < NZ; k++) {
@@ -460,7 +459,7 @@ void field_solve(mesh_t& m, real_t dt)
       for (int i = 0; i < NX; i++) {
   */
 
-  for ( auto v : m.vertices(interior) ) 
+  for ( auto v : m.vertices(interior) )
   {
 
     /* Convert this from 3d loop to flecsi loop
@@ -499,13 +498,13 @@ void field_solve(mesh_t& m, real_t dt)
     auto v_mj = v-j;
     auto v_mi = v-i;
 
-    Bx[v] = Bx[v] + dt * ( (Ey[v_pk] - Ey[v]) / dz - 
+    Bx[v] = Bx[v] + dt * ( (Ey[v_pk] - Ey[v]) / dz -
         (Ez[v_pj] - Ez[v]) / dy );
 
-    By[v] = By[v] + dt * ( (Ez[v_pk] - Ez[v]) / dx - 
+    By[v] = By[v] + dt * ( (Ez[v_pk] - Ez[v]) / dx -
         (Ex[v_pj] - Ex[v]) / dz );
 
-    Bz[v] = Bz[v] + dt * ( (Ex[v_pk] - Ex[v]) / dy - 
+    Bz[v] = Bz[v] + dt * ( (Ex[v_pk] - Ex[v]) / dy -
         (Ey[v_pj] - Ey[v]) / dx );
 
     // TODO: Check these indexes
@@ -520,31 +519,31 @@ void field_solve(mesh_t& m, real_t dt)
   }
 }
 
-/** 
- * @brief Particle mover 
+/**
+ * @brief Particle mover
  */
-void particle_move(mesh_t& m, species_t& sp, real_t dt) { 
+void particle_move(mesh_t& m, species_t& sp, real_t dt) {
 
-  // mult by delta_t and divide by delta_x 
-  // Swap in F/m = qE/m 
-  // v = v + (F * delta_t) / m 
+  // mult by delta_t and divide by delta_x
+  // Swap in F/m = qE/m
+  // v = v + (F * delta_t) / m
   // x = x + v * delta_t
 
   // Gives:
   // (v*delta_t)/delta_x = (v*delta_t / delta_x) + (q/m)*((E * delta_t^2) / delta_x)
 
-  // KE = m/2 * v_old * v_new 
+  // KE = m/2 * v_old * v_new
   //
 
-  //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);                    
-  auto particles_accesor = get_particle_accessor(m, sp.key); 
+  //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);
+  auto particles_accesor = get_particle_accessor(m, sp.key);
 
   for ( auto c : m.cells() ) {
 
     auto& cell_particles = particles_accesor[c];
 
-    // TODO: Is there a way abstract this loop structure with the current particle structure 
-    // TODO: this may need to be "active ppc" or similar 
+    // TODO: Is there a way abstract this loop structure with the current particle structure
+    // TODO: this may need to be "active ppc" or similar
     //
     // Only iterate over used blocks
     for (size_t i = 0; i < cell_particles.block_number+1; i++)
@@ -603,9 +602,9 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
 
 
 // TODO: Document this
-/** 
+/**
  * @brief Function to perform field interpolation calculation
- * 
+ *
  * @param m The mesh object
  */
 void interpolate_fields(mesh_t& m)
@@ -615,13 +614,13 @@ void interpolate_fields(mesh_t& m)
   real_t dy = Parameters::instance().dy;
   real_t dz = Parameters::instance().dz;
 
-  auto Bx = get_accessor(m, fields, bx, double, dense, 0);                    
-  auto By = get_accessor(m, fields, by, double, dense, 0);                    
-  auto Bz = get_accessor(m, fields, bz, double, dense, 0);                    
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);
+  auto By = get_accessor(m, fields, by, double, dense, 0);
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);
 
-  auto Ex = get_accessor(m, fields, ex, double, dense, 0);                    
-  auto Ey = get_accessor(m, fields, ey, double, dense, 0);                    
-  auto Ez = get_accessor(m, fields, ez, double, dense, 0);                    
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);
 
   interpolate_field(m, Bx, dx, dy, dz);
   interpolate_field(m, By, dx, dy, dz);
@@ -630,36 +629,36 @@ void interpolate_fields(mesh_t& m)
   interpolate_field(m, Ex, dx, dy, dz);
   interpolate_field(m, Ey, dx, dy, dz);
   interpolate_field(m, Ez, dx, dy, dz);
-  
+
   // TODO: Do I need to interpolate j?
 }
 
-/** 
+/**
  * @brief Velocity update implementing Boris rotation
- * 
+ *
  * @param mesh Mesh pointer
  * @param dt Time step to step by
 */
-void update_velocities(mesh_t& mesh, species_t& sp, real_t dt) 
+void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
 {
 
   // TODO: This could loop over cells 
   // TODO: We never actually use the calculated value from this function
 
-  auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);                    
-  auto By = get_accessor(mesh, fields, by, double, dense, 0);                    
-  auto Bz = get_accessor(mesh, fields, bz, double, dense, 0);                    
+  auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);
+  auto By = get_accessor(mesh, fields, by, double, dense, 0);
+  auto Bz = get_accessor(mesh, fields, bz, double, dense, 0);
 
-  auto Ex = get_accessor(mesh, fields, ex, double, dense, 0);                    
-  auto Ey = get_accessor(mesh, fields, ey, double, dense, 0);                    
-  auto Ez = get_accessor(mesh, fields, ez, double, dense, 0);                    
+  auto Ex = get_accessor(mesh, fields, ex, double, dense, 0);
+  auto Ey = get_accessor(mesh, fields, ey, double, dense, 0);
+  auto Ez = get_accessor(mesh, fields, ez, double, dense, 0);
 
   real_t q = sp.q;
   real_t m = sp.m;
 
-  auto particles_accesor = get_particle_accessor(mesh, sp.key); 
+  auto particles_accesor = get_particle_accessor(mesh, sp.key);
 
-  for ( auto c : mesh.cells() ) 
+  for ( auto c : mesh.cells() )
   {
     auto& cell_particles = particles_accesor[c];
 
@@ -669,9 +668,9 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
       // TODO: Do we want to explicitly implement a way to go from particle->cell?
       // TODO: Set these based on particle properties
       int cell_index[3];
-      cell_index[0] = 1; 
-      cell_index[1] = 1; 
-      cell_index[2] = 1; 
+      cell_index[0] = 1;
+      cell_index[1] = 1;
+      cell_index[2] = 1;
 
       dim_array_t E;
       dim_array_t B;
@@ -700,13 +699,13 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
 
         // v_new = v+ + qE/m * delta_t / 2
 
-        // v' = v- + v- X t 
-        // v+ = v- + v' X s 
+        // v' = v- + v- X t
+        // v+ = v- + v' X s
 
         // |v-|^2 = |v+|^2
-        // s = 2t / (1+t^2) 
-        // t = qB /m * delta_t / 2 
-        //
+        // s = 2t / (1+t^2)
+        // t = qB /m * delta_t / 2
+
         // TODO: move these data declarations
         dim_array_t t;
         dim_array_t velocity;
@@ -726,27 +725,27 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
         velocity[2] = uz;
 
         // Calculate t and |t^2|
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           t[i] = q/m * B[i] * 0.5 * dt;
           t_squared += t[i]*t[i];
         }
 
         // Calculate s
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           s[i] = 2*t[i] / (1+t_squared);
         }
 
         // Calculate v-
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           v_minus[i] = velocity[i] + q/m * E[i] * 0.5 * dt;
         }
 
         // Calculate v'
         dim_array_t vt_cross_product = cross_product( v_minus, t);
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           v_prime[i] = v_minus[i] + vt_cross_product[i];
         }
@@ -899,7 +898,7 @@ void driver(int argc, char ** argv) {
     std::cout << "Volume " << v->coordinates() << std::endl;
     //std::cout << v << std::endl;
     for ( auto c : m.cells(v) ) {
-      std::cout << c->volume() << std::endl;                                    
+      std::cout << c->volume() << std::endl;
     }
   }
   */
@@ -941,8 +940,8 @@ void driver(int argc, char ** argv) {
 
 #define VIS 0
 #if VIS
-  // I stole this from flecsale...and need to talk to Marc about how it works 
-  
+  // I stole this from flecsale...and need to talk to Marc about how it works
+
   std::string prefix = "mesh_out";
   std::string postfix = "dat";
 
