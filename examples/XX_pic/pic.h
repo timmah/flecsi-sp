@@ -48,10 +48,11 @@
 #include <flecsi-sp/pic/helpers.h> // should come in before types, as it inself needs it
 
 #include <flecsi-sp/pic/mesh.h>
+#include <flecsi-sp/pic/species.h>
 #include <flecsi-sp/pic/entity_types.h>
 #include <flecsi-sp/pic/simulation_parameters.h>
 #include <flecsi-sp/pic/boundary.h>
-#include <flecsi-sp/pic/species.h>
+#include <flecsi-sp/pic/visualization.h>
 
 // Namespaces
 using namespace flecsi;
@@ -666,17 +667,19 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
     {
 
       // TODO: Do we want to explicitly implement a way to go from particle->cell?
-      // TODO: Set these based on particle properties
+      auto v = mesh.vertices(c)[0]; // Try and grab the bottom corner of this cell
+      auto coord = v->coordinates();
+
       int cell_index[3];
-      cell_index[0] = 1;
-      cell_index[1] = 1;
-      cell_index[2] = 1;
+      cell_index[0] = coord[0];
+      cell_index[1] = coord[1];
+      cell_index[2] = coord[2];
 
       dim_array_t E;
       dim_array_t B;
 
       // TODO: Can hoist that q/m E dt/2?
-      //
+
       // TODO: This should interpolate based on particle shape and a function call
       E[0] = Ex[ cell_index[0] ];
       E[1] = Ey[ cell_index[1] ];
@@ -938,12 +941,48 @@ void driver(int argc, char ** argv) {
   } // for
   */
 
-#define VIS 0
+// Probably just don't enable this for a while..
+#define VIS 1
+
 #if VIS
+  //Visualizer* vis = new Visualizer();
+  Visualizer vis;
+
+  size_t total_num_particles = 0;
+
+  /*
+  for (unsigned int sn = 0; sn < species.size(); sn++)
+  {
+    int particle_count = species[sn].num_particles;
+    total_num_particles += particle_count;
+  }
+  */
+
+  // FIXME: Just try write one species for now
+  total_num_particles += species[0].num_particles;
+
+  vis.write_header(total_num_particles, num_steps);
+
+  auto particles_accesor = get_particle_accessor(m, species[0].key);
+
+  vis.write_particles(particles_accesor, total_num_particles, m);
+  vis.finalize();
+
+#endif
+
+#if VIS_FLECSI
+
   // I stole this from flecsale...and need to talk to Marc about how it works
 
+  // ... I assumed the flecsi io factory had built in functionality for basic
+  // grid outputting..but it doesn't seem that's true and I need to implement
+  // it myself
+  //
+  bool exodus_exo_registered = io_factory_t<fake_mesh_t>::instance().
+    registerType("exo", create_io_exodus<fake_mesh_t>);
+
   std::string prefix = "mesh_out";
-  std::string postfix = "dat";
+  std::string postfix = "exo";
 
   int step = 0;
   std::stringstream ss;
@@ -952,6 +991,7 @@ void driver(int argc, char ** argv) {
   ss << "."+postfix;
 
   flecsi::io::write_mesh( ss.str(), m );
+
 #endif
 
 } // driver

@@ -13,6 +13,7 @@ set(pic_HEADERS
   boundary.h
   simulation_parameters.h
   helpers.h
+  visualization.h
   PARENT_SCOPE
 )
 
