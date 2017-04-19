@@ -133,36 +133,36 @@ namespace flecsi {
                     }
 
                     /// Setters
-                    inline void set_x(size_t i, size_t v, real_t val)
+                    inline void set_x(real_t val, size_t i, size_t v)
                     {
                         block[i].dx[v] = val;
                     }
-                    inline void set_y(size_t i, size_t v, real_t val)
+                    inline void set_y(real_t val, size_t i, size_t v)
                     {
                         block[i].dy[v] = val;
                     }
-                    inline void set_z(size_t i, size_t v, real_t val)
+                    inline void set_z(real_t val, size_t i, size_t v)
                     {
                         block[i].dz[v] = val;
                     }
 
-                    inline void set_ux(size_t i, size_t v, real_t val)
+                    inline void set_ux(real_t val, size_t i, size_t v)
                     {
                         block[i].ux[v] = val;
                     }
-                    inline void set_uy(size_t i, size_t v, real_t val)
+                    inline void set_uy(real_t val, size_t i, size_t v)
                     {
                         block[i].uy[v] = val;
                     }
-                    inline void set_uz(size_t i, size_t v, real_t val)
+                    inline void set_uz(real_t val, size_t i, size_t v)
                     {
                         block[i].uz[v] = val;
                     }
-                    inline void set_w(size_t i, size_t v, real_t val)
+                    inline void set_w(real_t val, size_t i, size_t v)
                     {
                         block[i].w[v] = val;
                     }
-                    inline void set_i(size_t i, size_t v, int val)
+                    inline void set_i(int val, size_t i, size_t v)
                     {
                         block[i].i[v] = val;
                     }
