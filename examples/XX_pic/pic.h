@@ -106,13 +106,13 @@ void load_default_input_deck()
   species[0].set_initial_velocity(0,1,0);
   species[1].set_initial_velocity(0,-1,0);
 
-  Parameters::instance().NX_global = default_num_cells;
-  Parameters::instance().NY_global = default_num_cells;
-  Parameters::instance().NZ_global = default_num_cells;
+  Parameters::instance().NX_global = 16;
+  Parameters::instance().NY_global = 16;
+  Parameters::instance().NZ_global = 16;
 
-  Parameters::instance().nx = default_num_cells;
-  Parameters::instance().nx = default_num_cells;
-  Parameters::instance().nx = default_num_cells;
+  Parameters::instance().nx = Parameters::instance().NX_global;
+  Parameters::instance().ny = Parameters::instance().NY_global;
+  Parameters::instance().nz = Parameters::instance().NZ_global;
 
   Parameters::instance().NPPC = default_ppc;
 
@@ -271,6 +271,7 @@ real_t init_particle_weight(species_t& sp)
 void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x, real_t y, real_t z, auto c)
 {
 
+
   auto& cell_particles = particles_accesor[c];
 
   std::array<real_t,3> velocity = init_particle_velocity(sp);
@@ -292,6 +293,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
 
 
 // This is kind of horrible, I know..
+// TODO: This doesn't actually work and always returns the same one somehow?!
 auto get_particle_accessor(mesh_t& m, size_t species_key)
 {
   if (species_key == Species_Keys::ELECTRON)
@@ -552,11 +554,13 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
 
       for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
       {
-        // TODO: Does this need masking for the empty unfilled blocks 
+        // TODO: Does this need masking for the empty unfilled blocks
+        // TODO: It does, this will be be moving empty particles right now
 
         real_t x = cell_particles.get_x(i, v);
         real_t y = cell_particles.get_y(i, v);
         real_t z = cell_particles.get_z(i, v);
+
 
         real_t ux = cell_particles.get_ux(i, v);
         real_t uy = cell_particles.get_uy(i, v);
@@ -960,6 +964,7 @@ void driver(int argc, char ** argv) {
 
   // FIXME: Just try write one species for now
   total_num_particles += species[0].num_particles;
+  total_num_particles += species[1].num_particles;
 
   vis.write_header(total_num_particles, num_steps);
 
