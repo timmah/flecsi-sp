@@ -47,7 +47,7 @@ namespace flecsi {
 
                     // Consts
                     const real_t mu = 4.0 * M_PI * 1.0e-7; // permeability of free space
-                    const real_t c = 299792458; // Speed of light   
+                    const real_t c = 299792458; // Speed of light
                     const real_t eps = 1.0 / (c * c * mu); // permittivity of free space
 
                     size_t num_species = 0;
@@ -78,7 +78,7 @@ namespace flecsi {
                     real_t dz = len_z/nz;
             };
 
-            //int Parameters_::instance2() { } 
+            //int Parameters_::instance2() { }
 
         } // namespace pic
     } // namespace sp

@@ -298,7 +298,7 @@ namespace flecsi {
             )
         {
           return !is_domain_boundary(c->type());
-        } 
+        }
 
       using vertex_t = types::vertex_t;
       template<>
@@ -308,7 +308,7 @@ namespace flecsi {
             )
         {
           return !is_domain_boundary(v->type());
-        } 
+        }
 
       using cell_t = types::cell_t;
       template<>
@@ -318,21 +318,20 @@ namespace flecsi {
             )
         {
           return is_domain_boundary(c->type());
-        } 
+        }
 
       /*
-         using vertex_t = types::vertex_t;
-         template<>
-         bool
-         mesh_t::is_interior<vertex_t>(
-         vertex_t* c
-         )
-         {
-         std::cout << "vertex special specialized" << std::endl;
-         return !is_domain_boundary(c->type());
-         } 
-         */
-
+      using vertex_t = types::vertex_t;
+      template<>
+      bool
+      mesh_t::is_interior<vertex_t>(
+      vertex_t* c
+      )
+      {
+        std::cout << "vertex special specialized" << std::endl;
+        return !is_domain_boundary(c->type());
+      }
+      */
 
       // I had to move this outside as it uses the specialized is_interior
       ///

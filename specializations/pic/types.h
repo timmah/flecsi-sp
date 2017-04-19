@@ -17,7 +17,7 @@
 // \date Initial file creation: Oct 19, 2016
 ///
 
-#define NDIM 3 // Number of dimensions, i.e 3D 
+#define NDIM 3 // Number of dimensions, i.e 3D
 using real_t = double;
 
 namespace flecsi {

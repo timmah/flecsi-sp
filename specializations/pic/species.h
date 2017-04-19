@@ -7,7 +7,7 @@ namespace flecsi {
 
             template <class real_t> class species_
             {
-                public: 
+                public:
 
                     // Species properties
                     real_t q;

@@ -92,7 +92,7 @@ void load_default_input_deck()
 
   logger << "Importing Default Input Deck" << std::endl;
   const size_t default_num_cells = 64;
-  const size_t default_ppc = 4;
+  const size_t default_ppc = 8;
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
@@ -325,7 +325,7 @@ void particle_initialization(mesh_t& m)
   real_t dy = Parameters::instance().dy;
   real_t dz = Parameters::instance().dz;
 
-  for ( auto& sp : species )
+  for (auto& sp : species)
   {
     logger << "Init particles... " << std::endl;
 
@@ -541,6 +541,7 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
   //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);
   auto particles_accesor = get_particle_accessor(m, sp.key);
 
+  int cell_count = 0;
   for ( auto c : m.cells() ) {
 
     auto& cell_particles = particles_accesor[c];
@@ -561,21 +562,26 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
         real_t y = cell_particles.get_y(i, v);
         real_t z = cell_particles.get_z(i, v);
 
-
         real_t ux = cell_particles.get_ux(i, v);
         real_t uy = cell_particles.get_uy(i, v);
         real_t uz = cell_particles.get_uz(i, v);
+
+        std::cout << "Original x " << x << std::endl;
 
         x += ux*dt;
         y += uy*dt;
         z += uz*dt;
 
-        cell_particles.set_x(x, i, v);
-        cell_particles.set_y(y, i, v);
-        cell_particles.set_z(z, i, v);
+        std::cout << "Setting x to be " << x << " at cell " << cell_count << " i = " << i << " v = " << v << std::endl;
+        std::cout << "ux " << ux << " uy " << uy << " uz " << uz << " dt " << dt << std::endl;
+
+        cell_particles.set_x(i, v, x);
+        cell_particles.set_y(i, v, y);
+        cell_particles.set_z(i, v, y);
 
       }
     }
+    cell_count++;
   }
 
 }

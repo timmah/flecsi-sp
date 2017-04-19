@@ -3,11 +3,11 @@
 
 #include "flecsi-sp/pic/types.h"
 
-#if ENABLE_DEBUG                                                                
+#if ENABLE_DEBUG
   #define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t " 
-#else                                                                              
-#  define logger while(0) std::cout                                               
-#endif /* ENABLE_DEBUG */     
+#else
+#  define logger while(0) std::cout
+#endif /* ENABLE_DEBUG */
 
 using dim_array_t = std::array<real_t,NDIM>;
 //using a = flesci::sp::dim_array_t;

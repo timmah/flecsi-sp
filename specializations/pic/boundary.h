@@ -17,7 +17,7 @@ namespace flecsi {
                 right, // X
                 top, // Y
                 bottom, // Y
-                front, // Z 
+                front, // Z
                 back // Z
             };
 

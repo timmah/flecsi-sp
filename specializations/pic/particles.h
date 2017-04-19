@@ -10,40 +10,39 @@ namespace flecsi {
 
             template <class real_t> class particle_
             {
-                public: 
+                public:
                     /*
-                    particle_() {} 
-                    particle_(const particle_& p) { 
+                    particle_() {}
+                    particle_(const particle_& p) {
                         std::cout << "particle copy constructor" << std::endl;
                     }
-                    ~particle_() { } 
+                    ~particle_() { }
                     */
 
-                    real_t  dx[PARTICLE_BLOCK_SIZE];  
+                    real_t  dx[PARTICLE_BLOCK_SIZE];
                     real_t  dy[PARTICLE_BLOCK_SIZE];
                     real_t  dz[PARTICLE_BLOCK_SIZE];
-                    int32_t i[PARTICLE_BLOCK_SIZE];  
-                    real_t ux[PARTICLE_BLOCK_SIZE];  
+                    int32_t i[PARTICLE_BLOCK_SIZE];
+                    real_t ux[PARTICLE_BLOCK_SIZE];
                     real_t uy[PARTICLE_BLOCK_SIZE];
                     real_t uz[PARTICLE_BLOCK_SIZE];
-                    real_t  w[PARTICLE_BLOCK_SIZE];   
+                    real_t  w[PARTICLE_BLOCK_SIZE];
                     int32_t count = 0;
                     //TODO: Need to attribute_aligned on each array
             };
 
 
             template <class real_t> class particle_list_
-            { 
-
+            {
                 using particle_t = particle_<real_t>;
                 public:
                     /*
-                    particle_list_() 
+                    particle_list_()
                     {
                         std::cout << "Default Constructor " << num_blocks << std::endl;
                     }
 
-                    particle_list_(int num_blocks) 
+                    particle_list_(int num_blocks)
                     {
                         block = new particle_t[num_blocks];
                         std::cout << "Constructor " << num_blocks << std::endl;
@@ -76,29 +75,29 @@ namespace flecsi {
                     {
                         std::cout << "Assignment Constructor" << std::endl;
                     }
-                    
+
                     */
                     // TODO: This probably shouldn't be here
                     int block_number = 0;
                     static const int num_blocks = 4;
 
                     particle_t block[num_blocks];
-                    
+
 
                     /// General Methods
                     inline int add_particle(
-                            real_t x, 
-                            real_t y, 
-                            real_t z, 
-                            int ii, 
-                            real_t ux, 
-                            real_t uy, 
-                            real_t uz, 
+                            real_t x,
+                            real_t y,
+                            real_t z,
+                            int ii,
+                            real_t ux,
+                            real_t uy,
+                            real_t uz,
                             real_t w
                     )
                     {
                         int i = block_number;
-                        int v = block[block_number].count; 
+                        int v = block[block_number].count;
 
                         set_x( i, v, x );
                         set_y( i, v, y );
@@ -111,13 +110,13 @@ namespace flecsi {
                         set_w( i, v, w  );
                         set_i( i, v, ii );
 
-                        //std::cout << "Storing particle " << 
-                            //block[block_number].count << " at " << block_number 
+                        //std::cout << "Storing particle " <<
+                            //block[block_number].count << " at " << block_number
                             //<< std::endl;
 
                         block[block_number].count++;
 
-                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE) 
+                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
                         {
                             //std::cout << "Moving block along" << std::endl;
                             block[block_number].count--;
@@ -128,9 +127,9 @@ namespace flecsi {
                         assert(block->count < PARTICLE_BLOCK_SIZE);
 
                         // This means we over flowed our particle store...
-                            // Could replace this with a refusal to store 
+                            // Could replace this with a refusal to store
                             // the particle?
-                        assert(block_number < num_blocks); 
+                        assert(block_number < num_blocks);
                     }
 
                     /// Setters
