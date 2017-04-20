@@ -97,32 +97,25 @@ void load_default_input_deck()
 {
 
   logger << "Importing Default Input Deck" << std::endl;
-  const size_t default_num_cells = 64;
+  const size_t default_num_cells = 16;
   const size_t default_ppc = 8;
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
 
-  size_t num_species = 2;
+  //size_t num_species = 2;
 
   // Two identical species
   species.push_back( species_t(q,m) );
   species.push_back( species_t(q,m) );
 
-  real_t r1 = random_real( 0.0, 1.0 );
-  real_t r2 = random_real( 0.0, 1.0 );
-  real_t r3 = random_real( 0.0, 1.0 );
-
   // Two stream
   species[0].set_initial_velocity(0,1,0);
   species[1].set_initial_velocity(0,-1,0);
 
-  //species[0].set_initial_velocity(r1,r2,r3);
-  //species[1].set_initial_velocity(r1,r2,r3);
-
-  Parameters::instance().NX_global = 16;
-  Parameters::instance().NY_global = 16;
-  Parameters::instance().NZ_global = 16;
+  Parameters::instance().NX_global = default_num_cells;
+  Parameters::instance().NY_global = default_num_cells;
+  Parameters::instance().NZ_global = default_num_cells;
 
   Parameters::instance().nx = Parameters::instance().NX_global;
   Parameters::instance().ny = Parameters::instance().NY_global;
@@ -274,6 +267,21 @@ real_t init_particle_weight(species_t& sp)
   return sp.m;
 }
 
+int calculate_grid_cell(real_t x, real_t y, real_t z)
+{
+
+  // Use dx dy dz to work out which x/y/z, and turn into a 1d index
+  int cell_x = floor(x / Parameters::instance().dx);
+  int cell_y = floor(y / Parameters::instance().dy);
+  int cell_z = floor(z / Parameters::instance().dz);
+
+  // 1d index
+  int width = Parameters::instance().nx;
+  int depth = Parameters::instance().ny;
+
+  return (cell_z*width*depth) + (cell_y*width) + cell_x;
+}
+
 /**
  * @brief Function to insert particle into particle store at {x,y,z}
  *
@@ -295,7 +303,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
   real_t uz = velocity[2];
 
   // TODO: set this
-  int i; // implicit?
+  int i = calculate_grid_cell(x,y,z); // implicit?
 
   real_t w = init_particle_weight(sp);
 
@@ -566,7 +574,7 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
     for (size_t i = 0; i < cell_particles.block_number+1; i++)
     {
 
-      for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+      for (int v = 0; v < PARTICLE_BLOCK_SIZE; v++)
       {
         // TODO: Does this need masking for the empty unfilled blocks
         // TODO: It does, this will be be moving empty particles right now

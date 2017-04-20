@@ -78,14 +78,14 @@ namespace flecsi {
 
                     */
                     // TODO: This probably shouldn't be here
-                    int block_number = 0;
-                    static const int num_blocks = 4;
+                    size_t block_number = 0;
+                    static const size_t num_blocks = 4;
 
                     particle_t block[num_blocks];
 
 
                     /// General Methods
-                    inline int add_particle(
+                    void add_particle(
                             real_t x,
                             real_t y,
                             real_t z,

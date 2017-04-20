@@ -102,6 +102,8 @@ namespace flecsi {
         {
         }
 
+        // This gets called by the underlying mesh topology, but I'm not sure
+        // of it's practical use here
         std::vector<size_t>
           create_entities(
               id_t cell_id,
@@ -114,12 +116,14 @@ namespace flecsi {
             return {};
           } // create_entities
 
+        /*
         real_t
           volume()
           {
             // FIXME
             return 1.0;
           } // volume
+        */
 
         entity_type_t
           type()

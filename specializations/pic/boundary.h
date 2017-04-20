@@ -102,6 +102,8 @@ namespace flecsi {
                     p.set_ux(i, v, ux);
                     p.set_uy(i, v, uy);
                     p.set_uz(i, v, uz);
+
+                    return 1;
                 }
             };
 
