@@ -92,7 +92,7 @@ void load_default_input_deck()
 
   logger << "Importing Default Input Deck" << std::endl;
   const size_t default_num_cells = 64;
-  const size_t default_ppc = 4;
+  const size_t default_ppc = 8;
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
@@ -103,8 +103,16 @@ void load_default_input_deck()
   species.push_back( species_t(q,m) );
   species.push_back( species_t(q,m) );
 
+  real_t r1 = random_real( 0.0, 1.0 );
+  real_t r2 = random_real( 0.0, 1.0 );
+  real_t r3 = random_real( 0.0, 1.0 );
+
+  // Two stream
   species[0].set_initial_velocity(0,1,0);
   species[1].set_initial_velocity(0,-1,0);
+
+  //species[0].set_initial_velocity(r1,r2,r3);
+  //species[1].set_initial_velocity(r1,r2,r3);
 
   Parameters::instance().NX_global = 16;
   Parameters::instance().NY_global = 16;
@@ -557,6 +565,8 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
         // TODO: Does this need masking for the empty unfilled blocks
         // TODO: It does, this will be be moving empty particles right now
 
+        //if (mask[v]) continue;
+
         real_t x = cell_particles.get_x(i, v);
         real_t y = cell_particles.get_y(i, v);
         real_t z = cell_particles.get_z(i, v);
@@ -569,12 +579,9 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
         y += uy*dt;
         z += uz*dt;
 
-        //std::cout << "Setting x to be " << x << " at i = " << i << " v = " << v << std::endl;
-        //std::cout << "ux " << ux << " uy " << uy << " uz " << uz << std::endl;
-
-        cell_particles.set_x(x, i, v);
-        cell_particles.set_y(y, i, v);
-        cell_particles.set_z(z, i, v);
+        cell_particles.set_x(i, v, x);
+        cell_particles.set_y(i, v, y);
+        cell_particles.set_z(i, v, z);
 
       }
     }
@@ -600,7 +607,7 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
   for ( auto c : m.cells() )
   {
     for ( auto v : m.vertices(c) ) {
-      field[v] = 1.0;
+      field[v] = 0.0;
     }
   }
 
@@ -776,9 +783,9 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
         uy = velocity[1];
         uz = velocity[2];
 
-        cell_particles.set_ux(ux, i, v);
-        cell_particles.set_uy(uy, i, v);
-        cell_particles.set_uz(uz, i, v);
+        cell_particles.set_ux(i, v, ux);
+        cell_particles.set_uy(i, v, uy);
+        cell_particles.set_uz(i, v, uz);
 
       }
     }
@@ -840,14 +847,14 @@ void kernel(mesh_t& m)
       // Cross product implies a rotation?
       // E and B calculated at particle 
       // Interpolate E and B from grid to the particle
-      
+ 
     // Field Equations
-    
+
     // Yee Grid
       // Replaces Maxwell's equations with a set of finite difference equations
-      
+
   // FDTD (Finite-Difference Time-Domain)
-  
+
   fields_half(m);
 
   interpolate_fields(m);
@@ -855,6 +862,38 @@ void kernel(mesh_t& m)
   particle_push(m);
 
   fields_final(m);
+
+}
+
+void write_vis(mesh_t& m, Visualizer& vis, size_t step)
+{
+
+  std::cout << "Writing Vis " << step << std::endl;
+  size_t total_num_particles = 0;
+
+  /*
+  for (unsigned int sn = 0; sn < species.size(); sn++)
+  {
+    int particle_count = species[sn].num_particles;
+    total_num_particles += particle_count;
+  }
+  */
+
+  // FIXME: Just try write one species for now
+  total_num_particles += species[0].num_particles;
+  total_num_particles += species[1].num_particles;
+
+  std::cout << "hmm 0 " << std::endl;
+  std::cout << " sp 0 " << species[0].num_particles << std::endl;
+  std::cout << " sp 1 " << species[1].num_particles << std::endl;
+  std::cout << "hmm 1 " << std::endl;
+
+  vis.write_header(total_num_particles, step);
+
+  auto particles_accesor = get_particle_accessor(m, species[0].key);
+
+  vis.write_particles(particles_accesor, total_num_particles, m);
+  vis.finalize();
 
 }
 
@@ -913,18 +952,21 @@ void driver(int argc, char ** argv) {
   */
 
   // Do an initial velocity move of dt/2 backwards to enable the leap frogging
-  
-  for (auto sp : species) 
+
+  for (auto sp : species)
   {
     update_velocities(m, sp, -1 * (dt/2));
   }
 
+  Visualizer vis;
+
   // Perform main loop
   logger << "Starting Main Push" << std::endl;
-  for (size_t i = 0; i < num_steps; i++) 
+  for (size_t i = 0; i < num_steps; i++)
   {
     logger << "-> Start Step " << i << std::endl;
     kernel(m);
+    write_vis(m, vis, i);
   }
   logger << "Finished Main Push" << std::endl;
 
@@ -946,36 +988,6 @@ void driver(int argc, char ** argv) {
     u[v] = 0.0;
   } // for
   */
-
-// Probably just don't enable this for a while..
-#define VIS 1
-
-#if VIS
-  //Visualizer* vis = new Visualizer();
-  Visualizer vis;
-
-  size_t total_num_particles = 0;
-
-  /*
-  for (unsigned int sn = 0; sn < species.size(); sn++)
-  {
-    int particle_count = species[sn].num_particles;
-    total_num_particles += particle_count;
-  }
-  */
-
-  // FIXME: Just try write one species for now
-  total_num_particles += species[0].num_particles;
-  total_num_particles += species[1].num_particles;
-
-  vis.write_header(total_num_particles, num_steps);
-
-  auto particles_accesor = get_particle_accessor(m, species[0].key);
-
-  vis.write_particles(particles_accesor, total_num_particles, m);
-  vis.finalize();
-
-#endif
 
 #if VIS_FLECSI
 

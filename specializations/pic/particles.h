@@ -96,6 +96,17 @@ namespace flecsi {
                             real_t w
                     )
                     {
+
+                        // It should never be overfull
+                        assert(block->count < PARTICLE_BLOCK_SIZE);
+
+                        // If the current block is full
+                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
+                        {
+                            // Move onto the next block
+                            block_number++;
+                        }
+
                         int i = block_number;
                         int v = block[block_number].count;
 
@@ -110,21 +121,7 @@ namespace flecsi {
                         set_w( i, v, w  );
                         set_i( i, v, ii );
 
-                        //std::cout << "Storing particle " <<
-                            //block[block_number].count << " at " << block_number
-                            //<< std::endl;
-
                         block[block_number].count++;
-
-                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
-                        {
-                            //std::cout << "Moving block along" << std::endl;
-                            block[block_number].count--;
-                            block_number++;
-                        }
-
-                        // The added if above makes this essentially impossible?
-                        assert(block->count < PARTICLE_BLOCK_SIZE);
 
                         // This means we over flowed our particle store...
                             // Could replace this with a refusal to store
@@ -133,36 +130,36 @@ namespace flecsi {
                     }
 
                     /// Setters
-                    inline void set_x(real_t val, size_t i, size_t v)
+                    inline void set_x(size_t i, size_t v, real_t val)
                     {
                         block[i].dx[v] = val;
                     }
-                    inline void set_y(real_t val, size_t i, size_t v)
+                    inline void set_y(size_t i, size_t v, real_t val)
                     {
                         block[i].dy[v] = val;
                     }
-                    inline void set_z(real_t val, size_t i, size_t v)
+                    inline void set_z(size_t i, size_t v, real_t val)
                     {
                         block[i].dz[v] = val;
                     }
 
-                    inline void set_ux(real_t val, size_t i, size_t v)
+                    inline void set_ux(size_t i, size_t v, real_t val)
                     {
                         block[i].ux[v] = val;
                     }
-                    inline void set_uy(real_t val, size_t i, size_t v)
+                    inline void set_uy(size_t i, size_t v, real_t val)
                     {
                         block[i].uy[v] = val;
                     }
-                    inline void set_uz(real_t val, size_t i, size_t v)
+                    inline void set_uz(size_t i, size_t v, real_t val)
                     {
                         block[i].uz[v] = val;
                     }
-                    inline void set_w(real_t val, size_t i, size_t v)
+                    inline void set_w(size_t i, size_t v, real_t val)
                     {
                         block[i].w[v] = val;
                     }
-                    inline void set_i(int val, size_t i, size_t v)
+                    inline void set_i(size_t i, size_t v, int val)
                     {
                         block[i].i[v] = val;
                     }

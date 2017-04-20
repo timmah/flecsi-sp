@@ -95,13 +95,13 @@ namespace flecsi {
                     y = local_cell_max - y;
                     z = local_cell_max - z;
 
-                    p.set_x(x, i, v);
-                    p.set_y(y, i, v);
-                    p.set_z(z, i, v);
+                    p.set_x(i, v, x);
+                    p.set_y(i, v, y);
+                    p.set_z(i, v, z);
 
-                    p.set_ux(ux, i, v);
-                    p.set_uy(uy, i, v);
-                    p.set_uz(uz, i, v);
+                    p.set_ux(i, v, ux);
+                    p.set_uy(i, v, uy);
+                    p.set_uz(i, v, uz);
                 }
             };
 
