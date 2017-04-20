@@ -14,6 +14,7 @@ set(pic_HEADERS
   simulation_parameters.h
   helpers.h
   visualization.h
+  initial_conditions/initial_conditions.h
   PARENT_SCOPE
 )
 

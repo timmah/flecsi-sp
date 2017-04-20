@@ -53,6 +53,7 @@
 #include <flecsi-sp/pic/simulation_parameters.h>
 #include <flecsi-sp/pic/boundary.h>
 #include <flecsi-sp/pic/visualization.h>
+#include <flecsi-sp/pic/initial_conditions/initial_conditions.h>
 
 // Namespaces
 using namespace flecsi;
@@ -75,7 +76,12 @@ using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 //using particle_list_array_t = particle_list_t[PARTICLE_LIST_SIZE];
 
 // TODO: find somewhere nice to store these global simulation properties?
+//
+// TODO: I could wrap this in an object and have a field in it set of direct setting?
 BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
+
+initial_conditions_t* initial_conditions = new two_stream();
+
 std::vector<species_t> species;
 
 enum Species_Keys {
@@ -608,6 +614,7 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
   {
     for ( auto v : m.vertices(c) ) {
       field[v] = 0.0;
+      // TODO: Implement this
     }
   }
 
@@ -636,6 +643,7 @@ void interpolate_fields(mesh_t& m)
   auto Ey = get_accessor(m, fields, ey, double, dense, 0);
   auto Ez = get_accessor(m, fields, ez, double, dense, 0);
 
+  // TODO: Whats the deal with the return values for this?
   interpolate_field(m, Bx, dx, dy, dz);
   interpolate_field(m, By, dx, dy, dz);
   interpolate_field(m, Bz, dx, dy, dz);
