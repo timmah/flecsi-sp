@@ -707,6 +707,8 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
       dim_array_t E;
       dim_array_t B;
 
+			// TODO: Isn't indexing Ex with cell_index like that wrong? shouldn't it just be v?
+
       // TODO: Can hoist that q/m E dt/2?
 
       // TODO: This should interpolate based on particle shape and a function call
@@ -881,10 +883,121 @@ void kernel(mesh_t& m)
 
 }
 
+
+real_t field_energy(mesh_t& m)
+{
+  // VPIC:
+  // Convert to physical units and reduce results between nodes
+  // double v0 = 0.5*fa->g->eps0*fa->g->dV;
+  //
+  // VPIC does some stenciling and seems to calculate a weighted average for
+  // each cell
+  //
+  // (C)EPOCH does something a bit easier to follow:
+
+	/*
+      for (int i = 0; i < ny; i++) {
+          for (int j = 0; j < ny; j++) {
+							double field_energy_e = ( ex(i, j) * ex(i,j) ) + ( ey(i, j) *
+										ey(i,j) ) + ( ez(i, j) * ez(i,j) );
+
+							double field_energy_b = (c * c) * (( bx(i, j) * bx(i,j) ) +
+										(by(i, j) * by(i,j) ) + (bz(i, j) * bz(i,j)));
+
+              double field_energy = field_energy_b + field_energy_e;
+              total_field_energy += field_energy;
+
+          }
+      }
+      total_field_energy = 0.5 * epsilon0 * total_field_energy * dx * dy;
+	*/
+
+  real_t total_field_energy = 0.0;
+
+  auto Bx = get_accessor(m, fields, bx, double, dense, 0);
+  auto By = get_accessor(m, fields, by, double, dense, 0);
+  auto Bz = get_accessor(m, fields, bz, double, dense, 0);
+
+  auto Ex = get_accessor(m, fields, ex, double, dense, 0);
+  auto Ey = get_accessor(m, fields, ey, double, dense, 0);
+  auto Ez = get_accessor(m, fields, ez, double, dense, 0);
+
+  for ( auto c : m.cells() )
+  {
+    auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
+
+    // TODO: Find the names / derivations for these equations (the squaring is a bit suspect?)
+
+    // e_B = c^2 * (bx^2 + by^2 + bz^2)
+    real_t field_energy_B = (c*c) * ((Bx[v]*Bx[v]) + (By[v]*By[v]) + (Bz[v]*Bz[v]));
+
+    // e_E = ex^2 + ey^2 + ez^2
+    real_t field_energy_E = ((Ex[v]*Ex[v]) + (Ey[v]*Ey[v]) + (Ez[v]*Ez[v]));
+
+    // sum to total
+    real_t total_cell_energy = field_energy_B + field_energy_E;
+    total_field_energy += total_cell_energy;
+
+  }
+
+  return total_field_energy;
+
+}
+
+double calculate_kentic_energy(double part_ux, double part_uy, double part_uz, double part_m) {
+
+//#ifdef PER_PARTICLE_WEIGHT
+	//double mass = part_weight * part_m;
+//#else
+  double mass = part_m;
+//#endif
+
+	double gamma = sqrt(part_ux * part_ux + part_uy * part_uy + part_uz * part_uz + 1.0);
+	double kinetic_energy = mass * (gamma - 1.0);
+
+	return kinetic_energy;
+
+}
+double particle_energy(mesh_t& m, species_t& sp)
+{
+
+  double total_particle_energy = 0.0;
+
+  auto particles_accesor = get_particle_accessor(m, sp.key);
+
+  for ( auto c : m.cells() ) {
+
+    auto& cell_particles = particles_accesor[c];
+
+    for (size_t i = 0; i < cell_particles.block_number+1; i++)
+    {
+
+      for (int v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+      {
+        real_t ux = cell_particles.get_ux(i, v);
+        real_t uy = cell_particles.get_uy(i, v);
+        real_t uz = cell_particles.get_uz(i, v);
+
+        total_particle_energy += calculate_kentic_energy(ux,uy,uz, sp.m);
+      }
+    }
+  }
+
+  return total_particle_energy;
+}
+
+
+// Function to calculate the total energy based on fields and particles
+void energy_diagnostic()
+{
+  // In vpic this calls energy_f
+  // And then calls energy_p for each species
+}
+
 void write_vis(mesh_t& m, Visualizer& vis, size_t step)
 {
 
-  std::cout << "Writing Vis " << step << std::endl;
+  logger << "Writing Vis " << step << std::endl;
   size_t total_num_particles = 0;
 
   /*
@@ -898,11 +1011,6 @@ void write_vis(mesh_t& m, Visualizer& vis, size_t step)
   // FIXME: Just try write one species for now
   total_num_particles += species[0].num_particles;
   total_num_particles += species[1].num_particles;
-
-  std::cout << "hmm 0 " << std::endl;
-  std::cout << " sp 0 " << species[0].num_particles << std::endl;
-  std::cout << " sp 1 " << species[1].num_particles << std::endl;
-  std::cout << "hmm 1 " << std::endl;
 
   vis.write_header(total_num_particles, step);
 
