@@ -24,9 +24,33 @@ namespace flecsi {
             // TODO: Template the class based on this?
             //
             // TODO: Passing particle_list_t AND real_t doesn't make much sense
-            template <class particle_list_t, class real_t> class BoundaryStrategy
+            template <class particle_list_t> class BoundaryCondition
             {
-                public: 
+                public:
+
+                    real_t x_min = 0.0;
+                    real_t y_min = 0.0;
+                    real_t z_min = 0.0;
+                    real_t x_max = 0.0;
+                    real_t y_max = 0.0;
+                    real_t z_max = 0.0;
+
+                    void set_x_min(real_t val) { x_min = val; }
+                    void set_y_min(real_t val) { y_min = val; }
+                    void set_z_min(real_t val) { z_min = val; }
+
+                    void set_x_max(real_t val) { x_max = val; }
+                    void set_y_max(real_t val) { y_max = val; }
+                    void set_z_max(real_t val) { z_max = val; }
+
+                    real_t get_x_min() { return x_min; }
+                    real_t get_y_min() { return y_min; }
+                    real_t get_z_min() { return z_min; }
+
+                    real_t get_x_max() { return x_max; }
+                    real_t get_y_max() { return y_max; }
+                    real_t get_z_max() { return z_max; }
+
                     //using particle_list_t = particle_list_<real_t>;
                     //using particle_t = particle_<real_t>;
 
@@ -39,21 +63,44 @@ namespace flecsi {
                     // Does it matter assuming you can't have an instance of the base class?
 
                     // TODO: Is this trying to deal with inter_mpi boundary, or physical, or both?
-                    virtual inline int process_particle(particle_list_t& p, size_t i, size_t v) = 0;
+                    // TODO: These should be inline?
+                    virtual int process_particle(particle_list_t& p, size_t i, size_t v) = 0;
+                    virtual int process_particle_x(particle_list_t& p, size_t i, size_t v, real_t cell_max) = 0;
+                    virtual int process_particle_y(particle_list_t& p, size_t i, size_t v, real_t cell_max) = 0;
+                    virtual int process_particle_z(particle_list_t& p, size_t i, size_t v, real_t cell_max) = 0;
 
                 // Prevent instantiation of base class
                 protected:
-                    BoundaryStrategy() {}
-                    BoundaryStrategy(const BoundaryStrategy&) = delete;
-                    BoundaryStrategy& operator = (const BoundaryStrategy&) = delete;
+                    BoundaryCondition() {}
+                    BoundaryCondition(const BoundaryCondition&) = delete;
+                    BoundaryCondition& operator = (const BoundaryCondition&) = delete;
+
+
+                    BoundaryCondition(
+                            real_t x_min_in,
+                            real_t x_max_in,
+                            real_t y_min_in,
+                            real_t y_max_in,
+                            real_t z_min_in,
+                            real_t z_max_in
+                    ) :
+                        x_min(x_min_in),
+                        x_max(x_min_in),
+                        y_min(y_min_in),
+                        y_max(y_min_in),
+                        z_min(z_min_in),
+                        z_max(z_min_in)
+                    {
+                        // empty
+                    }
             };
 
 
-            template <class particle_list_t, class real_t> 
-                class ReflectiveBoundary : 
-                    public BoundaryStrategy<particle_list_t, real_t>
+            template <class particle_list_t>
+                class ReflectiveBoundary :
+                    public BoundaryCondition<particle_list_t>
             {
-                //using typename BoundaryStrategy<real_t>::particle_t; 
+                //using typename BoundaryConditionparticle_t; 
 
                 // TODO: What data interface does this need? 
                 // Is just the particle information sufficient to decide where to send it next ?
@@ -62,60 +109,146 @@ namespace flecsi {
                 // It could take the object and directly query the data, or we could try pass the Particle to it?
                 // Passing a particle would marry us to a data layout of AoS..
 
+              public: 
+                ReflectiveBoundary(
+                        real_t x_min_in,
+                        real_t x_max_in,
+                        real_t y_min_in,
+                        real_t y_max_in,
+                        real_t z_min_in,
+                        real_t z_max_in
+                ) : BoundaryCondition<particle_list_t>(
+                        x_min_in,
+                        x_max_in,
+                        y_min_in,
+                        y_max_in,
+                        z_min_in,
+                        z_max_in
+                )
+                {
+                    // Empty
+                }
+
                 inline int process_particle(
-                        particle_list_t& p,
+                        particle_list_t& cell_particles,
                         size_t i,
                         size_t v
                 ) final
                 {
+                    real_t x = cell_particles.get_x(i, v);
+                    real_t y = cell_particles.get_y(i, v);
+                    real_t z = cell_particles.get_z(i, v);
 
-                    const real_t local_cell_max = 1.0;
+                    // Out by X
+                    if (x > BoundaryCondition<particle_list_t>::get_x_max())
+                    {
+                        //logger << "x max boundary " << std::endl;
+                        process_particle_x(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_x_max());
+                    }
+                    else if (x > BoundaryCondition<particle_list_t>::get_x_min()) {
+                        //logger << "x min boundary " << std::endl;
+                        process_particle_x(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_x_min());
+                    }
 
+                    // Out by Y
+                    if (y > BoundaryCondition<particle_list_t>::get_y_max()) {
+                        //logger << "y max boundary " << std::endl;
+                        process_particle_y(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_y_max());
+                    }
+                    else if (y > BoundaryCondition<particle_list_t>::get_y_min()) {
+                        //logger << "y min boundary " << std::endl;
+                        process_particle_y(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_y_min());
+                    }
+
+                    if (z > BoundaryCondition<particle_list_t>::get_z_max()) {
+                        //logger << "z max boundary " << std::endl;
+                        process_particle_z(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_z_max());
+                    }
+                    else if (z > BoundaryCondition<particle_list_t>::get_z_min()) {
+                        //logger << "z min boundary " << std::endl;
+                        process_particle_z(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_z_min());
+                    }
+                }
+
+                inline int process_particle_x(
+                        particle_list_t& p,
+                        size_t i,
+                        size_t v,
+                        real_t local_cell_max
+                ) final
+                {
+
+                    // TODO: Can I get away with hard coding this? (if we store
+                    // relative offsets into the cell)
                     real_t x = p.get_x(i, v);
-                    real_t y = p.get_y(i, v);
-                    real_t z = p.get_z(i, v);
-
                     real_t ux = p.get_ux(i, v);
-                    real_t uy = p.get_uy(i, v);
-                    real_t uz = p.get_uz(i, v);
 
                     // Invert velocity
                     ux *= -1;
-                    uy *= -1;
-                    uz *= -1;
 
                     // Change position after bounding on boundary
 
                     // TODO: This needs to know the boundary position and
                         // therefor may need additional data?
-                    // TODO: This also needs to know how to move the particles, which may mean we dulicate code/logic
-                        // We could already assume it got moved?
-                        // If {xyz} are relative, it would just be 1-that?
+                        // For now we can just invest the boundary it hit in
                     x = local_cell_max - x;
-                    y = local_cell_max - y;
-                    z = local_cell_max - z;
 
                     p.set_x(i, v, x);
-                    p.set_y(i, v, y);
-                    p.set_z(i, v, z);
-
                     p.set_ux(i, v, ux);
-                    p.set_uy(i, v, uy);
-                    p.set_uz(i, v, uz);
 
                     return 1;
+                }
+
+                inline int process_particle_y(
+                        particle_list_t& p,
+                        size_t i,
+                        size_t v,
+                        real_t local_cell_max
+                ) final
+                {
+                    real_t y = p.get_y(i, v);
+                    real_t uy = p.get_uy(i, v);
+
+                    // Invert velocity
+                    uy *= -1;
+
+                    // Change position after bounding on boundary
+                    std::cout << "Reflecting from " << y << " to " << local_cell_max - y << std::endl;
+                    y = local_cell_max - y;
+
+                    p.set_y(i, v, y);
+                    p.set_uy(i, v, uy);
+                }
+                inline int process_particle_z(
+                        particle_list_t& p,
+                        size_t i,
+                        size_t v,
+                        real_t local_cell_max
+                ) final
+                {
+                    real_t z = p.get_z(i, v);
+                    real_t uz = p.get_uz(i, v);
+
+                    // Invert velocity
+                    uz *= -1;
+
+                    // Change position after bounding on boundarz
+                    z = local_cell_max - z;
+
+                    p.set_z(i, v, z);
+                    p.set_uz(i, v, uz);
                 }
             };
 
             /*
-            class ReflectiveBoundary : public BoundaryStrategy
+            class ReflectiveBoundary : public BoundaryCondition
             {
                 inline int process_particle(particle_t& p) final
                 {
                 }
             };
 
-            class PeriodicBoundary : public BoundaryStrategy
+            class PeriodicBoundary : public BoundaryCondition
             {
                 inline int process_particle(particle_t& p) final
                 {

@@ -73,6 +73,15 @@ namespace flecsi {
                     real_t len_y = len_y_global;
                     real_t len_z = len_z_global;
 
+                    // Assume domain starts at [0,0,0] and goes to [len,len,len]
+                    real_t local_x_min = 0.0;
+                    real_t local_y_min = 0.0;
+                    real_t local_z_min = 0.0;
+
+                    real_t local_x_max = len_x;
+                    real_t local_y_max = len_y;
+                    real_t local_z_max = len_z;
+
                     real_t dx = len_x/nx;
                     real_t dy = len_y/ny;
                     real_t dz = len_z/nz;

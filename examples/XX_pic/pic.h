@@ -78,7 +78,10 @@ using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 // TODO: find somewhere nice to store these global simulation properties?
 //
 // TODO: I could wrap this in an object and have a field in it set of direct setting?
-BoundaryStrategy<particle_list_t, real_t>* boundary = new ReflectiveBoundary<particle_list_t, real_t>();
+
+//BoundaryStrategy<particle_list_t, real_t>* boundary_handler = new ReflectiveBoundary<particle_list_t, real_t>();
+
+BoundaryCondition<particle_list_t>* boundary_handler;
 
 initial_conditions_t* initial_conditions = new two_stream();
 
@@ -390,7 +393,14 @@ void particle_initialization(mesh_t& m)
 void init_simulation(mesh_t& m)
 {
   // TODO: Much of this can be pushed into the specialization ?
-
+  boundary_handler = new ReflectiveBoundary<particle_list_t>(
+      Parameters::instance().local_x_min,
+      Parameters::instance().local_x_max,
+      Parameters::instance().local_y_min,
+      Parameters::instance().local_y_max,
+      Parameters::instance().local_z_min,
+      Parameters::instance().local_z_max
+  );
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
   register_data(m, fields, jx, double, dense, 1, vertices);
@@ -810,8 +820,36 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
   }
 }
 
+void boundary_check(mesh_t& m, species_t& sp)
+{
+  auto particles_accesor = get_particle_accessor(m, sp.key);
+
+  for ( auto c : m.cells() ) {
+
+    auto& cell_particles = particles_accesor[c];
+    // Only iterate over used blocks
+    for (size_t i = 0; i < cell_particles.block_number+1; i++)
+    {
+      for (int v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+      {
+        // FIXME: This could likely be pushed into the boundary code?
+        // Check if it hit a physical boundary
+
+        real_t x = cell_particles.get_x(i, v);
+        real_t y = cell_particles.get_y(i, v);
+        real_t z = cell_particles.get_z(i, v);
+
+        // FIXME: Two of these can happen at
+
+        // Check if it left cell
+
+      }
+    }
+  }
+}
+
 // TODO: Document this
-void particle_push(mesh_t& mesh) 
+void particle_push(mesh_t& mesh)
 {
   const real_t dt = Parameters::instance().dt;
 
@@ -819,6 +857,7 @@ void particle_push(mesh_t& mesh)
   {
     update_velocities(mesh, sp, dt);
     particle_move(mesh, sp, dt);
+    boundary_check(mesh, sp);
   }
 }
 
@@ -826,18 +865,18 @@ void particle_push(mesh_t& mesh)
 void fields_half(mesh_t& m) {
   const real_t dt = Parameters::instance().dt;
   field_solve(m, dt);
-} 
+}
 
 // TODO: Document this
 void fields_final(mesh_t& m) {
   const real_t dt = Parameters::instance().dt;
   field_solve(m, dt);
-} 
+}
 
-/** 
- * @brief Main kernel which makes main PIC algorithm calls 
+/**
+ * @brief Main kernel which makes main PIC algorithm calls
  */
-void kernel(mesh_t& m) 
+void kernel(mesh_t& m)
 {
 
   // Equations of motion
@@ -1055,9 +1094,9 @@ void driver(int argc, char ** argv) {
 
   // Init mesh
   init_mesh(
-      m, 
-      Parameters::instance().NX_global, 
-      Parameters::instance().NY_global, 
+      m,
+      Parameters::instance().NX_global,
+      Parameters::instance().NY_global,
       Parameters::instance().NZ_global);
 
   // Init Simulation (generic particles etc)
@@ -1077,20 +1116,24 @@ void driver(int argc, char ** argv) {
 
   // Do an initial velocity move of dt/2 backwards to enable the leap frogging
 
+
+  Visualizer vis;
+  size_t vis_offset = 2;
+  write_vis(m, vis, -2+vis_offset);
+
   for (auto sp : species)
   {
     update_velocities(m, sp, -1 * (dt/2));
   }
 
-  Visualizer vis;
-
+  write_vis(m, vis, -1+vis_offset);
   // Perform main loop
   logger << "Starting Main Push" << std::endl;
   for (size_t i = 0; i < num_steps; i++)
   {
     logger << "-> Start Step " << i << std::endl;
     kernel(m);
-    write_vis(m, vis, i);
+    write_vis(m, vis, i+vis_offset);
   }
   logger << "Finished Main Push" << std::endl;
 
