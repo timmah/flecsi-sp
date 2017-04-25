@@ -393,7 +393,8 @@ void particle_initialization(mesh_t& m)
 void init_simulation(mesh_t& m)
 {
   // TODO: Much of this can be pushed into the specialization ?
-  boundary_handler = new ReflectiveBoundary<particle_list_t>(
+  //boundary_handler = new ReflectiveBoundary<particle_list_t>(
+  boundary_handler = new PeriodicBoundary<particle_list_t>(
       Parameters::instance().local_x_min,
       Parameters::instance().local_x_max,
       Parameters::instance().local_y_min,
@@ -832,11 +833,11 @@ void boundary_check(mesh_t& m, species_t& sp)
     {
       for (int v = 0; v < PARTICLE_BLOCK_SIZE; v++)
       {
-        // FIXME: This could likely be pushed into the boundary code?
         // Check if it hit a physical boundary
         boundary_handler->process_particle( cell_particles, i, v);
 
         // Check if it left cell
+        // TODO: We need to handle moving the particles around the cell arrays..
 
       }
     }
