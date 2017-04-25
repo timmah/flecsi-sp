@@ -834,12 +834,7 @@ void boundary_check(mesh_t& m, species_t& sp)
       {
         // FIXME: This could likely be pushed into the boundary code?
         // Check if it hit a physical boundary
-
-        real_t x = cell_particles.get_x(i, v);
-        real_t y = cell_particles.get_y(i, v);
-        real_t z = cell_particles.get_z(i, v);
-
-        // FIXME: Two of these can happen at
+        boundary_handler->process_particle( cell_particles, i, v);
 
         // Check if it left cell
 

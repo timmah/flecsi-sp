@@ -85,11 +85,11 @@ namespace flecsi {
                             real_t z_max_in
                     ) :
                         x_min(x_min_in),
-                        x_max(x_min_in),
+                        x_max(x_max_in),
                         y_min(y_min_in),
-                        y_max(y_min_in),
+                        y_max(y_max_in),
                         z_min(z_min_in),
-                        z_max(z_min_in)
+                        z_max(z_max_in)
                     {
                         // empty
                     }
@@ -145,7 +145,7 @@ namespace flecsi {
                         //logger << "x max boundary " << std::endl;
                         process_particle_x(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_x_max());
                     }
-                    else if (x > BoundaryCondition<particle_list_t>::get_x_min()) {
+                    else if (x < BoundaryCondition<particle_list_t>::get_x_min()) {
                         //logger << "x min boundary " << std::endl;
                         process_particle_x(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_x_min());
                     }
@@ -155,7 +155,7 @@ namespace flecsi {
                         //logger << "y max boundary " << std::endl;
                         process_particle_y(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_y_max());
                     }
-                    else if (y > BoundaryCondition<particle_list_t>::get_y_min()) {
+                    else if (y < BoundaryCondition<particle_list_t>::get_y_min()) {
                         //logger << "y min boundary " << std::endl;
                         process_particle_y(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_y_min());
                     }
@@ -164,7 +164,7 @@ namespace flecsi {
                         //logger << "z max boundary " << std::endl;
                         process_particle_z(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_z_max());
                     }
-                    else if (z > BoundaryCondition<particle_list_t>::get_z_min()) {
+                    else if (z < BoundaryCondition<particle_list_t>::get_z_min()) {
                         //logger << "z min boundary " << std::endl;
                         process_particle_z(cell_particles, i, v, BoundaryCondition<particle_list_t>::get_z_min());
                     }
@@ -191,7 +191,7 @@ namespace flecsi {
                     // TODO: This needs to know the boundary position and
                         // therefor may need additional data?
                         // For now we can just invest the boundary it hit in
-                    x = local_cell_max - x;
+                    x = local_cell_max - (x-local_cell_max);
 
                     p.set_x(i, v, x);
                     p.set_ux(i, v, ux);
@@ -213,8 +213,8 @@ namespace flecsi {
                     uy *= -1;
 
                     // Change position after bounding on boundary
-                    std::cout << "Reflecting from " << y << " to " << local_cell_max - y << std::endl;
-                    y = local_cell_max - y;
+                    std::cout << "Reflecting from " << y << " to " << local_cell_max - y << " bound " << local_cell_max << std::endl;
+                    y = local_cell_max - (y-local_cell_max);
 
                     p.set_y(i, v, y);
                     p.set_uy(i, v, uy);
@@ -233,7 +233,7 @@ namespace flecsi {
                     uz *= -1;
 
                     // Change position after bounding on boundarz
-                    z = local_cell_max - z;
+                    z = local_cell_max - (z-local_cell_max);
 
                     p.set_z(i, v, z);
                     p.set_uz(i, v, uz);
