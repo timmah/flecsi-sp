@@ -129,10 +129,19 @@ namespace flecsi {
                     // Empty
                 }
 
+                inline real_t update_velocity(real_t v)
+                {
+                    return v*-1.0;
+                }
+                inline real_t update_position(real_t v, real_t boundary)
+                {
+                    return (boundary - (v-boundary));
+                }
+
                 inline int process_particle(
-                        particle_list_t& cell_particles,
-                        size_t i,
-                        size_t v
+                    particle_list_t& cell_particles,
+                    size_t i,
+                    size_t v
                 ) final
                 {
                     real_t x = cell_particles.get_x(i, v);
@@ -174,24 +183,19 @@ namespace flecsi {
                         particle_list_t& p,
                         size_t i,
                         size_t v,
-                        real_t local_cell_max
+                        real_t extent
                 ) final
                 {
 
                     // TODO: Can I get away with hard coding this? (if we store
                     // relative offsets into the cell)
-                    real_t x = p.get_x(i, v);
-                    real_t ux = p.get_ux(i, v);
 
                     // Invert velocity
-                    ux *= -1;
+                    real_t ux = p.get_ux(i, v);
+                    ux = update_velocity(ux);
 
-                    // Change position after bounding on boundary
-
-                    // TODO: This needs to know the boundary position and
-                        // therefor may need additional data?
-                        // For now we can just invest the boundary it hit in
-                    x = local_cell_max - (x-local_cell_max);
+                    real_t x = p.get_x(i, v);
+                    x = update_position(x, extent);
 
                     p.set_x(i, v, x);
                     p.set_ux(i, v, ux);
@@ -203,18 +207,17 @@ namespace flecsi {
                         particle_list_t& p,
                         size_t i,
                         size_t v,
-                        real_t local_cell_max
+                        real_t extent
                 ) final
                 {
-                    real_t y = p.get_y(i, v);
-                    real_t uy = p.get_uy(i, v);
 
                     // Invert velocity
-                    uy *= -1;
+                    real_t uy = p.get_uy(i, v);
+                    uy = update_velocity(uy);
 
                     // Change position after bounding on boundary
-                    std::cout << "Reflecting from " << y << " to " << local_cell_max - y << " bound " << local_cell_max << std::endl;
-                    y = local_cell_max - (y-local_cell_max);
+                    real_t y = p.get_y(i, v);
+                    y = update_position(y, extent);
 
                     p.set_y(i, v, y);
                     p.set_uy(i, v, uy);
@@ -223,17 +226,17 @@ namespace flecsi {
                         particle_list_t& p,
                         size_t i,
                         size_t v,
-                        real_t local_cell_max
+                        real_t extent
                 ) final
                 {
-                    real_t z = p.get_z(i, v);
-                    real_t uz = p.get_uz(i, v);
 
                     // Invert velocity
-                    uz *= -1;
+                    real_t uz = p.get_uz(i, v);
+                    uz = update_velocity(uz);
 
                     // Change position after bounding on boundarz
-                    z = local_cell_max - (z-local_cell_max);
+                    real_t z = p.get_z(i, v);
+                    z = update_position(z, extent);
 
                     p.set_z(i, v, z);
                     p.set_uz(i, v, uz);
