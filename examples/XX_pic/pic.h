@@ -46,6 +46,7 @@
 // Files from flecsi-sp
 #include "flecsi-sp/pic/entity_types.h"
 #include <flecsi-sp/pic/types.h>
+
 #include <flecsi-sp/pic/helpers.h> 
 
 #include <flecsi-sp/pic/mesh.h>
@@ -54,7 +55,7 @@
 #include <flecsi-sp/pic/simulation_parameters.h>
 #include <flecsi-sp/pic/boundary.h>
 #include <flecsi-sp/pic/visualization.h>
-#include <flecsi-sp/pic/initial_conditions/initial_conditions.h>
+
 
 // Namespaces
 using namespace flecsi;
@@ -69,6 +70,28 @@ using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 using species_t = flecsi::sp::pic::types::species_t;
 
 static constexpr size_t NDIM = flecsi::sp::pic_config_t::num_dimensions;
+
+// TODO: Where do I put these if they may be needed in other files? (such as initial conditions)
+enum Species_Keys {
+  ELECTRON, NEGATIVE
+};
+
+// This is kind of horrible, I know..
+// TODO: This doesn't actually work and always returns the same one somehow?!
+auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
+{
+  if (species_key == Species_Keys::ELECTRON)
+  {
+    return get_accessor(m, particles, p, particle_list_t, dense, 0);
+  }
+  else {
+    return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);
+  }
+}
+
+
+// TODO: fix the dependencies that mean this is below the get_particle_accessor method
+#include <flecsi-sp/pic/initial_conditions/initial_conditions.h>
 
 // Constants
 //#define AoS // TODO: Need other types
@@ -85,14 +108,10 @@ static constexpr size_t NDIM = flecsi::sp::pic_config_t::num_dimensions;
 //BoundaryStrategy<particle_list_t, real_t>* boundary_handler = new ReflectiveBoundary<particle_list_t, real_t>();
 
 BoundaryCondition<particle_list_t>* boundary_handler;
-
-initial_conditions_t* initial_conditions = new two_stream();
+initial_conditions_t* initial_conditions; 
 
 std::vector<species_t> species;
 
-enum Species_Keys {
-  ELECTRON, NEGATIVE
-};
 
 ///////////////////// BEGIN METHODS ////////////////////////
 
@@ -104,7 +123,7 @@ void load_default_input_deck()
 
   logger << "Importing Default Input Deck" << std::endl;
   const size_t default_num_cells = 16;
-  const size_t default_ppc = 8;
+  const size_t default_ppc = 32;
   const real_t default_grid_len = 1.0;
   real_t q = 1.0;
   real_t m = 1.0;
@@ -323,18 +342,6 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
 }
 
 
-// This is kind of horrible, I know..
-// TODO: This doesn't actually work and always returns the same one somehow?!
-auto get_particle_accessor(mesh_t& m, size_t species_key)
-{
-  if (species_key == Species_Keys::ELECTRON)
-  {
-    return get_accessor(m, particles, p, particle_list_t, dense, 0);
-  }
-  else {
-    return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);
-  }
-}
 
 /**
  * @brief Initialize particle store based on simulation parameters (includes
@@ -362,8 +369,21 @@ void particle_initialization(mesh_t& m)
 
     auto particles_accesor = get_particle_accessor(m, sp.key);
 
+    /*
     for ( auto c : m.cells() )
     {
+      auto& cell_particles = particles_accesor[c];
+      auto v = m.vertices(c)[0];
+      auto coords = v->coordinates();
+      size_t cell_id = coords_to_1d( coords, width, depth);
+      */
+
+      initial_conditions->process_species(
+          m,
+          sp
+      );
+
+      /*
       auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
       auto coord = v->coordinates();
 
@@ -384,7 +404,8 @@ void particle_initialization(mesh_t& m)
 
         insert_particle(m, sp, particles_accesor, x, y, z, c);
       }
-    }
+      */
+    //}
     logger << "Done particle init. Species now has " << sp.num_particles << " particles." << std::endl;
 
   }
@@ -408,6 +429,13 @@ void init_simulation(mesh_t& m)
       Parameters::instance().local_z_min,
       Parameters::instance().local_z_max
   );
+
+  initial_conditions = new two_stream(
+      Parameters::instance().nx,
+      Parameters::instance().ny,
+      Parameters::instance().NPPC
+  );
+
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
   register_data(m, fields, jx, double, dense, 1, vertices);

@@ -162,7 +162,6 @@ namespace flecsi {
                     BoundaryCondition(const BoundaryCondition&) = delete;
                     BoundaryCondition& operator = (const BoundaryCondition&) = delete;
 
-
                     BoundaryCondition(
                             real_t x_min_in,
                             real_t x_max_in,

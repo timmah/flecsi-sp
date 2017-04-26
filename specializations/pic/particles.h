@@ -79,7 +79,7 @@ namespace flecsi {
                     */
                     // TODO: This probably shouldn't be here
                     size_t block_number = 0;
-                    static const size_t num_blocks = 4;
+                    static const size_t num_blocks = 8;
 
                     particle_t block[num_blocks];
 
@@ -98,14 +98,7 @@ namespace flecsi {
                     {
 
                         // It should never be overfull
-                        assert(block->count < PARTICLE_BLOCK_SIZE);
-
-                        // If the current block is full
-                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
-                        {
-                            // Move onto the next block
-                            block_number++;
-                        }
+                        assert(block[block_number].count < PARTICLE_BLOCK_SIZE);
 
                         int i = block_number;
                         int v = block[block_number].count;
@@ -123,10 +116,17 @@ namespace flecsi {
 
                         block[block_number].count++;
 
+                        // If the current block is full
+                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
+                        {
+                            // Move onto the next block
+                            block_number++;
+                        }
+
                         // This means we over flowed our particle store...
                             // Could replace this with a refusal to store
                             // the particle?
-                        assert(block_number < num_blocks);
+                        //assert(block_number < num_blocks);
                     }
 
                     /// Setters
