@@ -10,6 +10,8 @@
 
 #include "flecsi-sp/geometry/point.h"
 #include "flecsi-sp/pic/entity_types.h"
+#include <flecsi-sp/pic/species.h>
+#include <flecsi-sp/pic/particles.h>
 
 ///
 // \file pic_types.h
@@ -17,7 +19,6 @@
 // \date Initial file creation: Oct 19, 2016
 ///
 
-#define NDIM 3 // Number of dimensions, i.e 3D
 using real_t = double;
 
 namespace flecsi {
@@ -30,6 +31,8 @@ namespace flecsi {
       ///
       struct types
       {
+
+        //
         //--------------------------------------------------------------------------//
         // Define local traits to satisfy mesh_topology requirements.
         //--------------------------------------------------------------------------//
@@ -41,6 +44,10 @@ namespace flecsi {
         /// The number of domains
         static constexpr size_t num_domains =
           pic_config_t::num_domains;
+
+        // TODO: can these classes be forward decalared to remove the include?
+        using species_t = species_<real_t>;
+        using particle_list_t = particle_list_<real_t>;
 
         //--------------------------------------------------------------------------//
         // Define basic types.

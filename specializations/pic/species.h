@@ -1,9 +1,13 @@
 #ifndef flecsi_sp_pic_species_h
 #define flecsi_sp_pic_species_h
 
+#include "flecsi-sp/pic/entity_types.h"
+
 namespace flecsi {
     namespace sp {
         namespace pic {
+
+            static constexpr size_t num_dimensions = pic_config_t::num_dimensions;
 
             template <class real_t> class species_
             {
@@ -12,7 +16,7 @@ namespace flecsi {
                     // Species properties
                     real_t q;
                     real_t m;
-                    std::array<real_t, NDIM> initial_velocity;
+                    std::array<real_t, num_dimensions> initial_velocity;
                     size_t key;
 
                     size_t num_particles = 0;

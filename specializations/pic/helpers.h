@@ -1,6 +1,7 @@
 #ifndef flecsi_sp_pic_helpers_h
 #define flecsi_sp_pic_helpers_h
 
+#include "flecsi-sp/pic/entity_types.h"
 #include "flecsi-sp/pic/types.h"
 
 #if ENABLE_DEBUG
@@ -9,7 +10,8 @@
 #  define logger while(0) std::cout
 #endif /* ENABLE_DEBUG */
 
-using dim_array_t = std::array<real_t,NDIM>;
+static constexpr size_t num_dimensions = flecsi::sp::pic_config_t::num_dimensions;
+using dim_array_t = std::array<real_t,num_dimensions>;
 //using a = flesci::sp::dim_array_t;
 
 ////// HELPER METHODS //////
@@ -45,6 +47,11 @@ dim_array_t cross_product(dim_array_t a, dim_array_t b)
   result[2] = a[0]*b[1] - a[1]*b[0];
 
   return result; 
+}
+
+size_t coords_to_1d(auto coord, size_t width, size_t depth)
+{
+  return (coord[2]*width*depth) + (coord[1]*width) + coord[0];
 }
 
 ////// END HELPERS ////// 

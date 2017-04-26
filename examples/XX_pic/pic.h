@@ -44,8 +44,9 @@
 #include <flecsi/io/io.h>
 
 // Files from flecsi-sp
+#include "flecsi-sp/pic/entity_types.h"
 #include <flecsi-sp/pic/types.h>
-#include <flecsi-sp/pic/helpers.h> // should come in before types, as it inself needs it
+#include <flecsi-sp/pic/helpers.h> 
 
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/species.h>
@@ -63,9 +64,11 @@ using namespace flecsi::sp::pic;
 using vertex_t = types::vertex_t;
 
 // Type implementations
-using particle_list_t = particle_list_<real_t>;
-using species_t = species_<real_t>;
+using particle_list_t = flecsi::sp::pic::types::particle_list_t;
 using Parameters = flecsi::sp::pic::Parameters_<real_t>;
+using species_t = flecsi::sp::pic::types::species_t;
+
+static constexpr size_t NDIM = flecsi::sp::pic_config_t::num_dimensions;
 
 // Constants
 //#define AoS // TODO: Need other types
@@ -274,15 +277,18 @@ int calculate_grid_cell(real_t x, real_t y, real_t z)
 {
 
   // Use dx dy dz to work out which x/y/z, and turn into a 1d index
-  int cell_x = floor(x / Parameters::instance().dx);
-  int cell_y = floor(y / Parameters::instance().dy);
-  int cell_z = floor(z / Parameters::instance().dz);
+  size_t cell_x = floor(x / Parameters::instance().dx);
+  size_t cell_y = floor(y / Parameters::instance().dy);
+  size_t cell_z = floor(z / Parameters::instance().dz);
 
   // 1d index
-  int width = Parameters::instance().nx;
-  int depth = Parameters::instance().ny;
+  size_t width = Parameters::instance().nx;
+  size_t depth = Parameters::instance().ny;
 
-  return (cell_z*width*depth) + (cell_y*width) + cell_x;
+  std::array<size_t, NDIM> coords = { cell_x, cell_y, cell_z };
+
+  return coords_to_1d( coords, width, depth);
+  //return (cell_z*width*depth) + (cell_y*width) + cell_x;
 }
 
 /**
@@ -392,7 +398,7 @@ void particle_initialization(mesh_t& m)
  */
 void init_simulation(mesh_t& m)
 {
-  // TODO: Much of this can be pushed into the specialization ?
+  // FIXME: Should I set the boundary on each edge such that I can mix boundaries?
   //boundary_handler = new ReflectiveBoundary<particle_list_t>(
   boundary_handler = new PeriodicBoundary<particle_list_t>(
       Parameters::instance().local_x_min,
