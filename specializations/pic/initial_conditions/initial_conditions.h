@@ -109,7 +109,7 @@ namespace flecsi {
                             real_t z = random_real(0,1);
 
                             // Negative
-                            if (sp.initial_velocity[1] == -1)
+                            if (sp.initial_velocity[2] == -1)
                             {
                                 cell_min = height/3.0;
                                 cell_max = cell_min+(width*height);

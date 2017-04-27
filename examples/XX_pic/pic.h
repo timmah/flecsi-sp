@@ -130,13 +130,14 @@ void load_default_input_deck()
 
   //size_t num_species = 2;
 
+  // TODO: Make the masses equal
   // Two identical species
   species.push_back( species_t(q,m) );
-  species.push_back( species_t(q,m) );
+  species.push_back( species_t(q,1.001*m) );
 
   // Two stream
-  species[0].set_initial_velocity(0,1,0);
-  species[1].set_initial_velocity(0,-1,0);
+  species[0].set_initial_velocity(0,0,1);
+  species[1].set_initial_velocity(0,0,-1);
 
   Parameters::instance().NX_global = default_num_cells;
   Parameters::instance().NY_global = default_num_cells;

@@ -190,6 +190,10 @@ namespace flecsi {
                     {
                         return block[i].uz[v];
                     }
+                    inline real_t get_w(size_t i, size_t v)
+                    {
+                        return block[i].w[v];
+                    }
 
             };
 
