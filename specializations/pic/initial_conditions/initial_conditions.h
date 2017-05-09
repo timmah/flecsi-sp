@@ -104,6 +104,7 @@ namespace flecsi {
                             size_t cell_min = 0;
                             size_t cell_max = 0;
 
+                            // TODO: Remove all this hard coding!
                             real_t x = random_real(0,1);
                             real_t y = random_real(0,1);
                             real_t z = random_real(0,1);

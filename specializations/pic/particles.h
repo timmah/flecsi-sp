@@ -36,6 +36,13 @@ namespace flecsi {
             {
                 using particle_t = particle_<real_t>;
                 public:
+
+                    size_t block_number = 0;
+                    static const size_t num_blocks = 4;
+
+                    particle_t block[num_blocks];
+
+                    // We don't want to do anything with complex object types
                     /*
                     particle_list_()
                     {
@@ -78,11 +85,6 @@ namespace flecsi {
 
                     */
                     // TODO: This probably shouldn't be here
-                    size_t block_number = 0;
-                    static const size_t num_blocks = 8;
-
-                    particle_t block[num_blocks];
-
 
                     /// General Methods
                     void add_particle(
@@ -96,6 +98,13 @@ namespace flecsi {
                             real_t w
                     )
                     {
+
+                        // If the current block is full
+                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
+                        {
+                            // Move onto the next block
+                            block_number++;
+                        }
 
                         // It should never be overfull
                         assert(block[block_number].count < PARTICLE_BLOCK_SIZE);
@@ -115,13 +124,6 @@ namespace flecsi {
                         set_i( i, v, ii );
 
                         block[block_number].count++;
-
-                        // If the current block is full
-                        if (block[block_number].count >= PARTICLE_BLOCK_SIZE)
-                        {
-                            // Move onto the next block
-                            block_number++;
-                        }
 
                         // This means we over flowed our particle store...
                             // Could replace this with a refusal to store

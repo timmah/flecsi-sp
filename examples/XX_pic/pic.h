@@ -80,11 +80,14 @@ enum Species_Keys {
 // TODO: This doesn't actually work and always returns the same one somehow?!
 auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
 {
+  // TODO: These 0's would only be valid if they were always the same lenght. change it (to different domain?)
   if (species_key == Species_Keys::ELECTRON)
   {
+    std::cout << "Selecting Electron" << std::endl;
     return get_accessor(m, particles, p, particle_list_t, dense, 0);
   }
   else {
+    std::cout << "Selecting Negative" << std::endl;
     return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);
   }
 }
@@ -95,23 +98,12 @@ auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
 
 // Constants
 //#define AoS // TODO: Need other types
-// TODO: Read NDIM from flecsi class and consolidate the two variables?
 
-// Do this at the particle list block level
-//#define PARTICLE_LIST_SIZE 4
-//using particle_list_array_t = particle_list_t[PARTICLE_LIST_SIZE];
-
-// TODO: find somewhere nice to store these global simulation properties?
-//
 // TODO: I could wrap this in an object and have a field in it set of direct setting?
-
-//BoundaryStrategy<particle_list_t, real_t>* boundary_handler = new ReflectiveBoundary<particle_list_t, real_t>();
-
 BoundaryCondition<particle_list_t>* boundary_handler;
 initial_conditions_t* initial_conditions; 
 
 std::vector<species_t> species;
-
 
 ///////////////////// BEGIN METHODS ////////////////////////
 
@@ -134,6 +126,10 @@ void load_default_input_deck()
   // Two identical species
   species.push_back( species_t(q,m) );
   species.push_back( species_t(q,1.001*m) );
+
+  // Set keys for species selector
+  species[0].key = Species_Keys::ELECTRON;
+  species[1].key = Species_Keys::NEGATIVE;
 
   // Two stream
   species[0].set_initial_velocity(0,0,1);
@@ -609,6 +605,7 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
   //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);
   auto particles_accesor = get_particle_accessor(m, sp.key);
 
+
   for ( auto c : m.cells() ) {
 
     auto& cell_particles = particles_accesor[c];
@@ -628,6 +625,7 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
         //if (mask[v]) continue;
 
         real_t x = cell_particles.get_x(i, v);
+        std::cout << " i " << i << " v " << v << " x " << x << std::endl;
         real_t y = cell_particles.get_y(i, v);
         real_t z = cell_particles.get_z(i, v);
 
@@ -886,6 +884,8 @@ void particle_push(mesh_t& mesh)
 
   for (auto sp : species)
   {
+    auto particles_accesor = get_particle_accessor(mesh, sp.key);
+    std::cout << "particles_accesor " << particles_accesor[mesh.cells()[1000]].get_ux(0,0) << std::endl;
     update_velocities(mesh, sp, dt);
     particle_move(mesh, sp, dt);
     boundary_check(mesh, sp);
