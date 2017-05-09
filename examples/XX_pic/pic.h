@@ -125,7 +125,7 @@ void load_default_input_deck()
   // TODO: Make the masses equal
   // Two identical species
   species.push_back( species_t(q,m) );
-  species.push_back( species_t(q,1.001*m) );
+  species.push_back( species_t(q,m) );
 
   // Set keys for species selector
   species[0].key = Species_Keys::ELECTRON;
@@ -625,7 +625,6 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
         //if (mask[v]) continue;
 
         real_t x = cell_particles.get_x(i, v);
-        std::cout << " i " << i << " v " << v << " x " << x << std::endl;
         real_t y = cell_particles.get_y(i, v);
         real_t z = cell_particles.get_z(i, v);
 
@@ -1070,23 +1069,39 @@ void write_vis(mesh_t& m, Visualizer& vis, size_t step)
   logger << "Writing Vis " << step << std::endl;
   size_t total_num_particles = 0;
 
-  /*
+
   for (unsigned int sn = 0; sn < species.size(); sn++)
   {
     int particle_count = species[sn].num_particles;
     total_num_particles += particle_count;
   }
-  */
-
-  // FIXME: Just try write one species for now
-  total_num_particles += species[0].num_particles;
-  total_num_particles += species[1].num_particles;
 
   vis.write_header(total_num_particles, step);
 
-  auto particles_accesor = get_particle_accessor(m, species[0].key);
+  for (unsigned int sn = 0; sn < species.size(); sn++)
+  {
+    auto particles_accesor = get_particle_accessor(m, species[sn].key);
+    vis.write_particle_pos(particles_accesor, total_num_particles, m);
+  }
 
-  vis.write_particles(particles_accesor, total_num_particles, m);
+  vis.write_cell_types(total_num_particles);
+
+  vis.pre_scalars(total_num_particles);
+  vis.write_particles_property_header("weight", total_num_particles);
+
+  for (unsigned int sn = 0; sn < species.size(); sn++)
+  {
+    auto particles_accesor = get_particle_accessor(m, species[sn].key);
+    vis.write_particles_w(particles_accesor, m);
+  }
+
+  vis.write_particles_property_header("species", total_num_particles);
+
+  for (unsigned int sn = 0; sn < species.size(); sn++)
+  {
+    auto particles_accesor = get_particle_accessor(m, species[sn].key);
+    vis.write_particles_sp(particles_accesor, m, sn);
+  }
   vis.finalize();
 
 }

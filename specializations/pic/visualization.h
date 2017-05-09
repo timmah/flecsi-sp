@@ -30,7 +30,7 @@ namespace flecsi {
                         vis_file << "POINTS " << total_num_particles << " float" << std::endl;
                     }
 
-                    void write_particles(auto particles_accesor, size_t num_particles, mesh_t& m)
+                    void write_particle_pos(auto particles_accesor, size_t num_particles, mesh_t& m)
                     {
 
                         size_t write_count = 0;
@@ -61,6 +61,7 @@ namespace flecsi {
                                 }
                             }
                         }
+                    }
 
                         /*
                            for (unsigned int sn = 0; sn < species.size(); sn++) {
@@ -78,16 +79,29 @@ namespace flecsi {
                            }
                            */
 
+                    void write_cell_types(size_t num_particles)
+                    {
                         vis_file << "CELL_TYPES " << num_particles << std::endl;
 
                         for (size_t p = 0; p < num_particles; p++)
                         {
                             vis_file << "1" << std::endl;
                         }
+                    }
 
+                    void pre_scalars(size_t num_particles)
+                    {
                         vis_file << "POINT_DATA " << num_particles << std::endl;
-                        vis_file << "SCALARS weight float 1"  << std::endl;
+                    }
+
+                    void write_particles_property_header(std::string name, size_t num_particles)
+                    {
+                        vis_file << "SCALARS " << name << " float 1"  << std::endl;
                         vis_file << "LOOKUP_TABLE default" << std::endl;
+                    }
+
+                    void write_particles_w(auto particles_accesor, mesh_t& m)
+                    {
 
                         for ( auto c : m.cells() ) {
 
@@ -109,21 +123,30 @@ namespace flecsi {
                                 }
                             }
                         }
-
-                        /*
-                    //0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0
-                    //for (unsigned int species_number = 0; species_number < species.size(); species_number++) {
-                        //Species& this_species = get_species(species_number);
-                        //int particle_count = this_species.get_num_particles();
-                        for (size_t particle_number = 0; particle_number < num_particles; particle_number++) {
-                            // TODO: Figure out what quantities are useful to output.
-                            double weight = 1.1;
-                            vis_file << weight << std::endl;
-                        }
-                    //}
-                    */
-
                     }
+
+                    void write_particles_sp(auto particles_accesor, mesh_t& m, size_t sn)
+                    {
+                        for ( auto c : m.cells() ) {
+
+                            auto& cell_particles = particles_accesor[c];
+                            for (size_t i = 0; i < cell_particles.block_number+1; i++)
+                            {
+                                for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
+                                {
+                                    real_t x = cell_particles.get_x(i, v);
+                                    real_t y = cell_particles.get_y(i, v);
+                                    real_t z = cell_particles.get_z(i, v);
+
+                                    // TODO: Find a better way to filter particles out, USE MASK
+                                    if (x == 0 && y == 0 && z == 0) continue;
+
+                                    vis_file << sn << std::endl;
+                                }
+                            }
+                        }
+                    }
+
                     void finalize()
                     {
                         vis_file.close();
