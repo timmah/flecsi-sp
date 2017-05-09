@@ -58,6 +58,13 @@ TEST_F(minimal_t, sanity) {
 
 } // TEST
 
+TEST_F(minimal_t, indicies) {
+
+  size_t faces =  m.indices(minimal::minimal_index_spaces_t::cells);
+  ASSERT_EQ(faces,N*N);
+
+} // TEST
+
 /*----------------------------------------------------------------------------*
  * Cinch test Macros
  *
