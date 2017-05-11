@@ -127,6 +127,18 @@ struct minimal_cell_t
   minimal_cell_t(topology::mesh_topology_base_t & mesh, cell_type_t type)
     : mesh_(mesh), type_(type) {}
 
+  /**
+   * @brief Informally, flecsi does not do the associate of higher order
+   * things (edges/faces). This function describes these associations, for
+   * example which vertices are associated with which edges (or faces).
+   *
+   * @param cell_id Id of this cell
+   * @param dim Dimension
+   * @param c Connectivity
+   * @param e Edges
+   *
+   * @return Returns the number of vertices per edge described
+   */
   std::vector<size_t>
   create_entities(
     id_t cell_id,
@@ -135,8 +147,21 @@ struct minimal_cell_t
     id_t * e
   )
   {
-    // FIXME
-    return {};
+    id_t* v = c.get_entities(cell_id, 0);
+
+    e[0] = v[0];
+    e[1] = v[2];
+
+    e[2] = v[1];
+    e[3] = v[3];
+
+    e[4] = v[0];
+    e[5] = v[1];
+
+    e[6] = v[2];
+    e[7] = v[3];
+
+    return {2, 2, 2, 2};
   } // create_entities
 
   real_t

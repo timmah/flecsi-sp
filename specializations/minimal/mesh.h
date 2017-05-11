@@ -49,7 +49,7 @@ public:
   using base_t = topology::mesh_topology_t<minimal_types_t>;
 
   static constexpr size_t dimension = minimal_config_t::num_dimensions;
-  
+
   using vertex_t = minimal_types_t::vertex_t;
   using cell_t = minimal_types_t::cell_t;
 

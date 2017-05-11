@@ -58,13 +58,26 @@ TEST_F(minimal_t, sanity) {
 
 } // TEST
 
+// TODO: Finish implementing this once its clear what params create_entities
+// needs
+/*
 TEST_F(minimal_t, indicies) {
 
-  size_t faces =  m.indices(minimal::minimal_index_spaces_t::cells);
+  std::vector<size_t> e = {2,2,2,2};
+  std::vector<size_t> edges = {2,2,2,2};
+  auto c = mesh.cells()[0];
+  c.create_entities(...);
+
+  ASSERT_EQ(e,edges);
+
+} // TEST
+*/
+
+TEST_F(minimal_t, entities) {
+
   ASSERT_EQ(faces,N*N);
 
 } // TEST
-
 /*----------------------------------------------------------------------------*
  * Cinch test Macros
  *
