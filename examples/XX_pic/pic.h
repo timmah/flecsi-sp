@@ -29,8 +29,8 @@
 //
 ///////////////////////////////////
 
-#ifndef driver_h
-#define driver_h
+#ifndef pic_driver_h
+#define pic_driver_h
 
 // Currently this should be above helpers.h, but at some point should be cmake'd
 #define ENABLE_DEBUG 1
@@ -47,7 +47,7 @@
 #include "flecsi-sp/pic/entity_types.h"
 #include <flecsi-sp/pic/types.h>
 
-#include <flecsi-sp/pic/helpers.h> 
+#include <flecsi-sp/pic/helpers.h>
 
 #include <flecsi-sp/pic/mesh.h>
 #include <flecsi-sp/pic/species.h>
@@ -76,11 +76,11 @@ enum Species_Keys {
   ELECTRON, NEGATIVE
 };
 
-// This is kind of horrible, I know..
-// TODO: This doesn't actually work and always returns the same one somehow?!
+// This is kind of horrible, I know.. but it just has to work until I'm given
+// proper particle support..
 auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
 {
-  // TODO: These 0's would only be valid if they were always the same lenght. change it (to different domain?)
+  // TODO: These 0's would only be valid if they were always the same length. change it (to different domain?)
   if (species_key == Species_Keys::ELECTRON)
   {
     std::cout << "Selecting Electron" << std::endl;
@@ -92,16 +92,16 @@ auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
   }
 }
 
-
 // TODO: fix the dependencies that mean this is below the get_particle_accessor method
+// That may mean moving it to a different translation unit and forward declaring?
 #include <flecsi-sp/pic/initial_conditions/initial_conditions.h>
 
 // Constants
 //#define AoS // TODO: Need other types
 
-// TODO: I could wrap this in an object and have a field in it set of direct setting?
+// TODO: I could wrap this in an object and have a field in it set, instead of direct setting?
 BoundaryCondition<particle_list_t>* boundary_handler;
-initial_conditions_t* initial_conditions; 
+initial_conditions_t* initial_conditions;
 
 std::vector<species_t> species;
 
@@ -224,8 +224,6 @@ void init_mesh(mesh_t& m, size_t nx, size_t ny, size_t nz)
   m.init();
 }
 
-
-
 /**
  * @brief Initialize electric and magnetic fields.
  *
@@ -318,7 +316,6 @@ int calculate_grid_cell(real_t x, real_t y, real_t z)
 void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x, real_t y, real_t z, auto c)
 {
 
-
   auto& cell_particles = particles_accesor[c];
 
   std::array<real_t,3> velocity = init_particle_velocity(sp);
@@ -337,8 +334,6 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
   // Update number of particles
   sp.num_particles++;
 }
-
-
 
 /**
  * @brief Initialize particle store based on simulation parameters (includes
@@ -520,23 +515,16 @@ void field_solve(mesh_t& m, real_t dt)
   auto Jy = get_accessor(m, fields, jy, double, dense, 0);
   auto Jz = get_accessor(m, fields, jz, double, dense, 0);
 
-  /* Convert this from 3d loop to flecsi loop
-  for (int k = 0; k < NZ; k++) {
-    for (int j = 0; j < NY; j++) {
-      for (int i = 0; i < NX; i++) {
-  */
-
   for ( auto v : m.vertices(interior) )
   {
-
     /* Convert this from 3d loop to flecsi loop
-        Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz - 
+        Bx[k][j][i] = Bx[k][j][i] + dt * ( (Ey[k+1][j][i] - Ey[k][j][i]) / dz -
             (Ez[k][j+1][i] - Ez[k][j][i]) / dy );
 
-        By[k][j][i] = By[k][j][i] + dt * ( (Ez[k+1][j][i] - Ez[k][j][i]) / dx - 
+        By[k][j][i] = By[k][j][i] + dt * ( (Ez[k+1][j][i] - Ez[k][j][i]) / dx -
             (Ex[k][j+1][i] - Ex[k][j][i]) / dz );
 
-        Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy - 
+        Bz[k][j][i] = Bz[k][j][i] + dt * ( (Ex[k+1][j][i] - Ex[k][j][i]) / dy -
             (Ey[k][j+1][i] - Ey[k][j][i]) / dx );
 
         Ex[k][j][i] = ( (1/(mu*eps)) * ( ((Bz[k][j][i] - Bz[k][j-1][i] ) / dy ) +
@@ -587,9 +575,14 @@ void field_solve(mesh_t& m, real_t dt)
 }
 
 /**
- * @brief Particle mover
+ * @brief Particle Mover
+ *
+ * @param m Mesh Object
+ * @param sp Species being moved
+ * @param dt Timestep to move by
  */
-void particle_move(mesh_t& m, species_t& sp, real_t dt) {
+void particle_move(mesh_t& m, species_t& sp, real_t dt)
+{
 
   // mult by delta_t and divide by delta_x
   // Swap in F/m = qE/m
@@ -600,11 +593,9 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
   // (v*delta_t)/delta_x = (v*delta_t / delta_x) + (q/m)*((E * delta_t^2) / delta_x)
 
   // KE = m/2 * v_old * v_new
-  //
 
   //auto particles_accesor = get_accessor(m, particles, p, particle_list_t, dense, 0);
   auto particles_accesor = get_particle_accessor(m, sp.key);
-
 
   for ( auto c : m.cells() ) {
 
@@ -646,21 +637,21 @@ void particle_move(mesh_t& m, species_t& sp, real_t dt) {
 
 }
 
-/** 
+/**
  * @brief Function to interpolate from field points at a given grid point
  * This currently uses a simple nearest grid-points shape weightings
- * 
- * @param m The mesh object to get data references 
+ *
+ * @param m The mesh object to get data references
  * @param field The accessor to the field to work on
  * @param dx The x position to interpolate to
  * @param dy The y position to interpolate to
  * @param dz The z position to interpolate to
- * 
+ *
  * @return An n-dimensional array containing the interpolated weights
  */
-dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_t dz) 
+dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_t dz)
 {
-  dim_array_t field_vals; 
+  dim_array_t field_vals;
   for ( auto c : m.cells() )
   {
     for ( auto v : m.vertices(c) ) {
@@ -672,8 +663,6 @@ dim_array_t interpolate_field(mesh_t& m, auto field, real_t dx, real_t dy, real_
   return field_vals;
 }
 
-
-// TODO: Document this
 /**
  * @brief Function to perform field interpolation calculation
  *
@@ -715,7 +704,7 @@ void interpolate_fields(mesh_t& m)
 void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
 {
 
-  // TODO: This could loop over cells 
+  // TODO: This could loop over cells
   // TODO: We never actually use the calculated value from this function
 
   auto Bx = get_accessor(mesh, fields, bx, double, dense, 0);
@@ -765,9 +754,9 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
 
       for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
       {
-        // Use the Boris method to update the velocity and rotate (P62 in Birdsall) 
-        // Example of this can also be found here 
-        // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java 
+        // Use the Boris method to update the velocity and rotate (P62 in Birdsall)
+        // Example of this can also be found here
+        // https://www.particleincell.com/wp-content/uploads/2011/07/ParticleIntegrator.java
 
         // Equations:
 
@@ -829,13 +818,13 @@ void update_velocities(mesh_t& mesh, species_t& sp, real_t dt)
 
         // Calculate v+
         dim_array_t vs_cross_product = cross_product( v_prime, s);
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           v_plus[i] = v_minus[i] + vs_cross_product[i];
         }
 
         // Calculate v_new
-        for (size_t i = 0; i < NDIM; i++) 
+        for (size_t i = 0; i < NDIM; i++)
         {
           velocity[i] = v_plus[i] + q/m * E[i] * 0.5 * dt;
         }
@@ -910,31 +899,31 @@ void kernel(mesh_t& m)
 {
 
   // Equations of motion
-  // Leap frog method. 
+  // Leap frog method.
     // TODO: Does this change in 3d?
-    // Integrate force and velocity independently 
+    // Integrate force and velocity independently
     //
-    //  m * (dv)/(dt) = F 
+    //  m * (dv)/(dt) = F
     //      (dx)/(dt) = V
     //
-    //  Can do this as a finite difference. 
+    //  Can do this as a finite difference.
     //
     //  m * (v_new - v_old) / (delta t) = F_old
     //      (x_new - x_old) / (delta t) = v_new
     //
     // Advances v_t to v_(t+delta t) and x_t to x_(t+delta_t)
-      // v and x however are at difference times 
-     
+      // v and x however are at difference times
+
     // TODO: Push this back
-    // Push v back to v_(t-(delta t / 2)) 
-     
-    // F has two parts 
-    // F = F_electric + F_magnetic 
-    // F = qE + q(v x B) 
+    // Push v back to v_(t-(delta t / 2))
+
+    // F has two parts
+    // F = F_electric + F_magnetic
+    // F = qE + q(v x B)
       // Cross product implies a rotation?
-      // E and B calculated at particle 
+      // E and B calculated at particle
       // Interpolate E and B from grid to the particle
- 
+
     // Field Equations
 
     // Yee Grid
@@ -1013,55 +1002,6 @@ real_t field_energy(mesh_t& m)
 
 }
 
-double calculate_kentic_energy(double part_ux, double part_uy, double part_uz, double part_m) {
-
-//#ifdef PER_PARTICLE_WEIGHT
-	//double mass = part_weight * part_m;
-//#else
-  double mass = part_m;
-//#endif
-
-	double gamma = sqrt(part_ux * part_ux + part_uy * part_uy + part_uz * part_uz + 1.0);
-	double kinetic_energy = mass * (gamma - 1.0);
-
-	return kinetic_energy;
-
-}
-double particle_energy(mesh_t& m, species_t& sp)
-{
-
-  double total_particle_energy = 0.0;
-
-  auto particles_accesor = get_particle_accessor(m, sp.key);
-
-  for ( auto c : m.cells() ) {
-
-    auto& cell_particles = particles_accesor[c];
-
-    for (size_t i = 0; i < cell_particles.block_number+1; i++)
-    {
-
-      for (int v = 0; v < PARTICLE_BLOCK_SIZE; v++)
-      {
-        real_t ux = cell_particles.get_ux(i, v);
-        real_t uy = cell_particles.get_uy(i, v);
-        real_t uz = cell_particles.get_uz(i, v);
-
-        total_particle_energy += calculate_kentic_energy(ux,uy,uz, sp.m);
-      }
-    }
-  }
-
-  return total_particle_energy;
-}
-
-
-// Function to calculate the total energy based on fields and particles
-void energy_diagnostic()
-{
-  // In vpic this calls energy_f
-  // And then calls energy_p for each species
-}
 
 void write_vis(mesh_t& m, Visualizer& vis, size_t step)
 {
@@ -1107,16 +1047,17 @@ void write_vis(mesh_t& m, Visualizer& vis, size_t step)
 }
 
 
-/** 
+/**
  * @brief Driver function to be called by flecsi, functionally equivalent to
  * main method
  *
  * Sets up simulation, call main kernel
- * 
+ *
  * @param argc argc
  * @param argv argv
  */
-void driver(int argc, char ** argv) {
+void driver(int argc, char ** argv)
+{
 
   // Declare mesh
   mesh_t m;
@@ -1128,7 +1069,7 @@ void driver(int argc, char ** argv) {
     std::string file_name = "dummy.json"; // TODO: get this from args
     read_input_deck(file_name);
   }
-  else 
+  else
   {
     load_default_input_deck();
   }*/
@@ -1143,30 +1084,18 @@ void driver(int argc, char ** argv) {
       m,
       Parameters::instance().NX_global,
       Parameters::instance().NY_global,
-      Parameters::instance().NZ_global);
+      Parameters::instance().NZ_global
+  );
 
   // Init Simulation (generic particles etc)
   init_simulation(m);
 
-  /*
-  // Example of how to iterate cells from verticies
-  for ( auto v : m.vertices() )
-  {
-    std::cout << "Volume " << v->coordinates() << std::endl;
-    //std::cout << v << std::endl;
-    for ( auto c : m.cells(v) ) {
-      std::cout << c->volume() << std::endl;
-    }
-  }
-  */
-
-  // Do an initial velocity move of dt/2 backwards to enable the leap frogging
-
-
+  // Set up vis
   Visualizer vis;
   size_t vis_offset = 2;
   write_vis(m, vis, -2+vis_offset);
 
+  // Do an initial velocity move of dt/2 backwards to enable the leap frogging
   for (auto sp : species)
   {
     update_velocities(m, sp, -1 * (dt/2));
@@ -1183,52 +1112,9 @@ void driver(int argc, char ** argv) {
   }
   logger << "Finished Main Push" << std::endl;
 
-  /*
-  auto ap = get_mutator(m, solver, p, double, sparse, 0, 3);
-
-  for(auto v: m.vertices()) 
-  {
-    for(size_t i(0); i<3; ++i) 
-    {
-      ap(v, i) = 1.0;
-    } // for
-  } // for
-
-  auto u = get_accessor(m, solver, unknowns, double, dense, 0);
-
-  for(auto v: m.vertices()) {
-    std::cout << v->coordinates() << std::endl;
-    u[v] = 0.0;
-  } // for
-  */
-
-#if VIS_FLECSI
-
-  // I stole this from flecsale...and need to talk to Marc about how it works
-
-  // ... I assumed the flecsi io factory had built in functionality for basic
-  // grid outputting..but it doesn't seem that's true and I need to implement
-  // it myself
-  //
-  bool exodus_exo_registered = io_factory_t<fake_mesh_t>::instance().
-    registerType("exo", create_io_exodus<fake_mesh_t>);
-
-  std::string prefix = "mesh_out";
-  std::string postfix = "exo";
-
-  int step = 0;
-  std::stringstream ss;
-  ss << prefix;
-  ss << std::setw( 7 ) << std::setfill( '0' ) << step++;
-  ss << "."+postfix;
-
-  flecsi::io::write_mesh( ss.str(), m );
-
-#endif
-
 } // driver
 
-#endif // driver_h
+#endif // pic_driver_h
 
 /*~-------------------------------------------------------------------------~-*
  * Formatting options
