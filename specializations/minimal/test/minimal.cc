@@ -75,6 +75,7 @@ TEST_F(minimal_t, indicies) {
 
 TEST_F(minimal_t, entities) {
 
+  int faces = 6;
   ASSERT_EQ(faces,N*N);
 
 } // TEST
