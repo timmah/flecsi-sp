@@ -38,4 +38,43 @@ class elapsed_timer_t {
             return total_times[label].count();
         }
 };
+
+class particle_timer_t {
+
+    private:
+        const std::string label = "PARTICLES";
+
+        elapsed_timer_t* timer;
+    public:
+
+        particle_timer_t() {
+            timer = new elapsed_timer_t();
+        }
+
+        ~particle_timer_t()
+        {
+            delete timer;
+        }
+
+        void start()
+        {
+            timer->start(label);
+        }
+
+        double stop()
+        {
+            return timer->stop(label);
+        }
+
+        double total()
+        {
+            return timer->get_total(label);
+        }
+
+        double per_particle(size_t count)
+        {
+            return total() / count;
+        }
+};
+
 #endif // guard

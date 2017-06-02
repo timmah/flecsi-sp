@@ -56,6 +56,7 @@
 #include <flecsi-sp/pic/boundary.h>
 #include <flecsi-sp/pic/visualization.h>
 
+#include "timer.h"
 
 // Namespaces
 using namespace flecsi;
@@ -104,6 +105,9 @@ BoundaryCondition<particle_list_t>* boundary_handler;
 initial_conditions_t* initial_conditions;
 
 std::vector<species_t> species;
+
+elapsed_timer_t* times;
+particle_timer_t* particle_timer;
 
 ///////////////////// BEGIN METHODS ////////////////////////
 
@@ -427,6 +431,10 @@ void init_simulation(mesh_t& m)
       Parameters::instance().ny,
       Parameters::instance().NPPC
   );
+
+  times = new elapsed_timer_t();
+  particle_timer = new particle_timer_t();
+
 
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data
@@ -870,14 +878,25 @@ void particle_push(mesh_t& mesh)
 {
   const real_t dt = Parameters::instance().dt;
 
+  size_t count = 0;
   for (auto sp : species)
   {
     auto particles_accesor = get_particle_accessor(mesh, sp.key);
     std::cout << "particles_accesor " << particles_accesor[mesh.cells()[1000]].get_ux(0,0) << std::endl;
+
+    particle_timer->start();
+
     update_velocities(mesh, sp, dt);
     particle_move(mesh, sp, dt);
     boundary_check(mesh, sp);
+
+    particle_timer->stop();
+
+    count += sp.num_particles;
   }
+
+  std::cout << "Particle Time: " << particle_timer->total() << std::endl;
+  std::cout << "Per Particle : " << particle_timer->per_particle(count) << std::endl;
 }
 
 // TODO: Document this
@@ -931,7 +950,12 @@ void kernel(mesh_t& m)
 
   // FDTD (Finite-Difference Time-Domain)
 
+  times->start("field_half");
   fields_half(m);
+  double time = times->stop("field_half");
+
+  std::cout << "Fields Time " << time << " total " <<
+    times->get_total("field_half") << std::endl;
 
   interpolate_fields(m);
 
