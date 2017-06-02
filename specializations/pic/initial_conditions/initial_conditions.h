@@ -51,6 +51,30 @@ namespace flecsi {
 
                     initial_conditions_t (const initial_conditions_t&) = delete;
                     initial_conditions_t & operator = (const initial_conditions_t&) = delete;
+
+                    void add_particle(
+                            species_t& sp,
+                            particle_list_t& cell_particles,
+                            size_t cell_id,
+                            size_t nppc,
+                            real_t x,
+                            real_t y,
+                            real_t z
+                    )
+                    {
+
+                        std::array<real_t,3> velocity = sp.initial_velocity;
+
+                        real_t ux = velocity[0];
+                        real_t uy = velocity[1];
+                        real_t uz = velocity[2];
+
+                        real_t w = sp.m;
+
+                        cell_particles.add_particle(x, y, z, cell_id, ux, uy, uz, w);
+                        sp.num_particles++;
+                    }
+
             };
 
             class two_stream : public initial_conditions_t
@@ -66,8 +90,8 @@ namespace flecsi {
                                 height_in,
                                 nppc_in
                                 )
-                {
-                }
+                    {
+                    }
 
                     inline int common_function() final
                     {
@@ -79,10 +103,6 @@ namespace flecsi {
                             species_t& sp
                     )
                     {
-                        //auto v = m.vertices(c)[0];
-                        //auto coord = v->coordinates();
-
-                        //auto& cell_particles = particles_accesor[c];
 
                         auto particles_accesor = get_particle_accessor(m, sp.key);
 
@@ -123,7 +143,6 @@ namespace flecsi {
                                 y = random_real(2.0/3.0, 2.0/3.0+0.02);
                             }
 
-
                             if ( (cell_id > cell_min) && (cell_id < cell_max)) {
                                 proccess_this_cell = true;
                             }
@@ -136,29 +155,6 @@ namespace flecsi {
                                 }
                             }
                         }
-                    }
-
-                    void add_particle(
-                            species_t& sp,
-                            particle_list_t& cell_particles,
-                            size_t cell_id,
-                            size_t nppc,
-                            real_t x,
-                            real_t y,
-                            real_t z
-                    )
-                    {
-
-                        std::array<real_t,3> velocity = sp.initial_velocity;
-
-                        real_t ux = velocity[0];
-                        real_t uy = velocity[1];
-                        real_t uz = velocity[2];
-
-                        real_t w = sp.m;
-
-                        cell_particles.add_particle(x, y, z, cell_id, ux, uy, uz, w);
-                        sp.num_particles++;
                     }
             };
 
