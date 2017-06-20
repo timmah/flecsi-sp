@@ -22,8 +22,9 @@ namespace flecsi {
             {
 
                 // TODO: Setters and getters
-                public: 
-                    //Ben way of doing things
+                public:
+
+                    //Ben preferred way of doing singleton
                     static Parameters_& instance()
                     {
                         static Parameters_ instance_;

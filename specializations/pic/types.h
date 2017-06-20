@@ -12,6 +12,7 @@
 #include "flecsi-sp/pic/entity_types.h"
 #include <flecsi-sp/pic/species.h>
 #include <flecsi-sp/pic/particles.h>
+#include <flecsi-sp/pic/simulation_parameters.h>
 
 ///
 // \file pic_types.h
@@ -32,7 +33,8 @@ namespace flecsi {
       struct types
       {
 
-        //
+        using Parameters = flecsi::sp::pic::Parameters_<real_t>;
+
         //--------------------------------------------------------------------------//
         // Define local traits to satisfy mesh_topology requirements.
         //--------------------------------------------------------------------------//
@@ -48,6 +50,8 @@ namespace flecsi {
         // TODO: can these classes be forward decalared to remove the include?
         using species_t = species_<real_t>;
         using particle_list_t = particle_list_<real_t>;
+
+        using species_list_t = std::vector<species_t>;
 
         //--------------------------------------------------------------------------//
         // Define basic types.

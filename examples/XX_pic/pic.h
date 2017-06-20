@@ -35,6 +35,11 @@
 // Currently this should be above helpers.h, but at some point should be cmake'd
 #define ENABLE_DEBUG 1
 
+// TODO: Remove this
+  // I've included this as a terrible hack around the current build state of
+  // flecis/flecsi-sp. The includes need it but it doens't get passed
+#define TEST_TOLERANCE 1.0e-14
+
 // Includes
 #include <iostream>
 #include <iomanip>
@@ -66,9 +71,12 @@ using namespace flecsi::sp::pic;
 using vertex_t = types::vertex_t;
 
 // Type implementations
-using particle_list_t = flecsi::sp::pic::types::particle_list_t;
-using Parameters = flecsi::sp::pic::Parameters_<real_t>;
 using species_t = flecsi::sp::pic::types::species_t;
+using species_list_t = flecsi::sp::pic::types::species_list_t;
+using particle_list_t = flecsi::sp::pic::types::particle_list_t;
+
+using Parameters = flecsi::sp::pic::types::Parameters;
+
 
 static constexpr size_t NDIM = flecsi::sp::pic_config_t::num_dimensions;
 
@@ -104,7 +112,7 @@ auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
 BoundaryCondition<particle_list_t>* boundary_handler;
 initial_conditions_t* initial_conditions;
 
-std::vector<species_t> species;
+species_list_t species;
 
 elapsed_timer_t* times;
 particle_timer_t* particle_timer;
@@ -121,23 +129,6 @@ void load_default_input_deck()
   const size_t default_num_cells = 16;
   const size_t default_ppc = 32;
   const real_t default_grid_len = 1.0;
-  real_t q = 1.0;
-  real_t m = 1.0;
-
-  //size_t num_species = 2;
-
-  // TODO: Make the masses equal
-  // Two identical species
-  species.push_back( species_t(q,m) );
-  species.push_back( species_t(q,m) );
-
-  // Set keys for species selector
-  species[0].key = Species_Keys::ELECTRON;
-  species[1].key = Species_Keys::NEGATIVE;
-
-  // Two stream
-  species[0].set_initial_velocity(0,0,1);
-  species[1].set_initial_velocity(0,0,-1);
 
   Parameters::instance().NX_global = default_num_cells;
   Parameters::instance().NY_global = default_num_cells;
@@ -427,14 +418,11 @@ void init_simulation(mesh_t& m)
   );
 
   initial_conditions = new two_stream(
-      Parameters::instance().nx,
-      Parameters::instance().ny,
-      Parameters::instance().NPPC
+      species
   );
 
   times = new elapsed_timer_t();
   particle_timer = new particle_timer_t();
-
 
   // We assume all field values are defined on *vertices*, not edge (or cells)
   // Register data

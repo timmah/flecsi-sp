@@ -18,6 +18,7 @@ namespace flecsi {
             // Type imports
             using species_t = types::species_t;
             using particle_list_t = types::particle_list_t;
+            using species_list_t = types::species_list_t;
 
             // What's the best way to implement this?
             // Want something which can be trivially user extendible
@@ -32,19 +33,12 @@ namespace flecsi {
 
                 // Prevent instantiation of base class
                 protected:
-                    size_t width = 0;
-                    size_t height = 0;
-                    size_t nppc = 0;
-                    // TODO: Make construtor
+                    species_list_t& species;
 
                     initial_conditions_t (
-                            size_t width_in,
-                            size_t height_in,
-                            size_t nppc_in
+                            species_list_t& species_in
                     ) :
-                        width(width_in),
-                        height(height_in),
-                        nppc(nppc_in)
+                        species(species_in)
                     {
                         // empty
                     }
@@ -82,15 +76,25 @@ namespace flecsi {
 
                 public:
                     two_stream(
-                            size_t width_in,
-                            size_t height_in,
-                            size_t nppc_in
+                                species_list_t& species
                             ) : initial_conditions_t(
-                                width_in,
-                                height_in,
-                                nppc_in
-                                )
+                                species
+                            )
                     {
+                        real_t q = 1.0;
+                        real_t m = 1.0;
+
+                        // Two identical species
+                        species.push_back( species_t(q,m) );
+                        species.push_back( species_t(q,m) );
+
+                        // Set keys for species selector
+                        species[0].key = Species_Keys::ELECTRON;
+                        species[1].key = Species_Keys::NEGATIVE;
+
+                        // Two stream
+                        species[0].set_initial_velocity(0,0,1);
+                        species[1].set_initial_velocity(0,0,-1);
                     }
 
                     inline int common_function() final
@@ -114,8 +118,9 @@ namespace flecsi {
                             auto v = m.vertices(c)[0];
                             auto coords = v->coordinates();
 
-                            size_t width = initial_conditions_t::width;
-                            size_t height = initial_conditions_t::height;
+                            // Just the local bit? So needs to be nx? not NX_global?
+                            size_t width = Parameters::instance().nx;
+                            size_t height = Parameters::instance().ny;
 
                             size_t cell_id = coords_to_1d(coords, width, height);
 
@@ -124,7 +129,6 @@ namespace flecsi {
                             size_t cell_min = 0;
                             size_t cell_max = 0;
 
-                            // TODO: Remove all this hard coding!
                             real_t x = random_real(0,1);
                             real_t y = random_real(0,1);
                             real_t z = random_real(0,1);
@@ -132,13 +136,14 @@ namespace flecsi {
                             // Negative
                             if (sp.initial_velocity[2] == -1)
                             {
+                                // Try and place in the top third row
                                 cell_min = height/3.0;
                                 cell_max = cell_min+(width*height);
                                 y = random_real(1.0/3.0, 1.0/3.0+0.02);
                             }
                             // Positive
                             else {
-                                cell_min = height/3.0;
+                                cell_min = 2*(height/3.0);
                                 cell_max = cell_min+(width*height);
                                 y = random_real(2.0/3.0, 2.0/3.0+0.02);
                             }
@@ -148,7 +153,7 @@ namespace flecsi {
                             }
 
                             if (proccess_this_cell) {
-
+                                size_t nppc = Parameters::instance().NPPC;
                                 for (size_t i = 0; i < nppc; i++)
                                 {
                                     add_particle(sp, cell_particles, cell_id, nppc, x, y, z);
