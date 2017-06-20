@@ -93,8 +93,8 @@ namespace flecsi {
                         species[1].key = Species_Keys::NEGATIVE;
 
                         // Two stream
-                        species[0].set_initial_velocity(0,0,1);
-                        species[1].set_initial_velocity(0,0,-1);
+                        species[0].set_initial_velocity(1,0,0);
+                        species[1].set_initial_velocity(-1,0,0);
                     }
 
                     inline int common_function() final
@@ -118,9 +118,11 @@ namespace flecsi {
                             auto v = m.vertices(c)[0];
                             auto coords = v->coordinates();
 
+
                             // Just the local bit? So needs to be nx? not NX_global?
                             size_t width = Parameters::instance().nx;
                             size_t height = Parameters::instance().ny;
+                            size_t depth = Parameters::instance().nz;
 
                             size_t cell_id = coords_to_1d(coords, width, height);
 
@@ -129,33 +131,51 @@ namespace flecsi {
                             size_t cell_min = 0;
                             size_t cell_max = 0;
 
-                            real_t x = random_real(0,1);
-                            real_t y = random_real(0,1);
-                            real_t z = random_real(0,1);
+                            // Calculate bounds of this cell
+                            real_t min_z = coords[1] * Parameters::instance().dz;
+                            real_t max_z = min_z + Parameters::instance().dz;
 
-                            // Negative
-                            if (sp.initial_velocity[2] == -1)
+                            size_t nppc = Parameters::instance().NPPC;
+                            for (size_t i = 0; i < nppc; i++)
                             {
-                                // Try and place in the top third row
-                                cell_min = height/3.0;
-                                cell_max = cell_min+(width*height);
-                                y = random_real(1.0/3.0, 1.0/3.0+0.02);
-                            }
-                            // Positive
-                            else {
-                                cell_min = 2*(height/3.0);
-                                cell_max = cell_min+(width*height);
-                                y = random_real(2.0/3.0, 2.0/3.0+0.02);
-                            }
+                                real_t z = 0.0;
 
-                            if ( (cell_id > cell_min) && (cell_id < cell_max)) {
-                                proccess_this_cell = true;
-                            }
-
-                            if (proccess_this_cell) {
-                                size_t nppc = Parameters::instance().NPPC;
-                                for (size_t i = 0; i < nppc; i++)
+                                // Negative
+                                if (sp.initial_velocity[0] == -1)
                                 {
+                                    // Try and place in the top third row
+                                    cell_min = ( depth / 3.0) * width * height;
+                                    cell_max = cell_min+(width*height);
+                                    z = random_real(1.0/3.0, 1.0/3.0+0.02);
+                                }
+                                // Positive
+                                else {
+                                    // Try and place in the bottom third row
+                                    cell_min = (( 2 * depth) / 3.0) * width * height;
+                                    cell_max = cell_min+(width*height);
+                                    z = random_real(2.0/3.0, 2.0/3.0+0.02);
+                                }
+
+                                // I need it to hit a full area in 2 dimensions, and only one high in another.
+                                // The easiest way to calculate this, is to fix a z, and add a full layer of x*y
+                                if ( (cell_id > cell_min) && (cell_id < cell_max)) {
+                                    proccess_this_cell = true;
+                                }
+
+                                if (proccess_this_cell)
+                                {
+
+                                    // Place random coordinates
+                                    real_t min_x = coords[0] * Parameters::instance().dx;
+                                    real_t max_x = min_x + Parameters::instance().dx;
+
+                                    real_t min_y = coords[1] * Parameters::instance().dy;
+                                    real_t max_y = min_y + Parameters::instance().dy;
+
+                                    // Assign random local in this cell
+                                    real_t x = random_real(min_x,max_x);
+                                    real_t y = random_real(min_y,max_y);
+
                                     add_particle(sp, cell_particles, cell_id, nppc, x, y, z);
                                 }
                             }

@@ -146,7 +146,7 @@ void load_default_input_deck()
 
   Parameters::instance().len_x_global = default_grid_len;
   Parameters::instance().len_y_global = default_grid_len;
-  Parameters::instance().len_x_global = default_grid_len;
+  Parameters::instance().len_z_global = default_grid_len;
 
   Parameters::instance().len_x = default_grid_len;
   Parameters::instance().len_y = default_grid_len;
