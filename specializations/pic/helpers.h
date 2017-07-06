@@ -4,6 +4,9 @@
 #include "flecsi-sp/pic/entity_types.h"
 #include "flecsi-sp/pic/types.h"
 
+// NOTE: This should be defined by Cmake not here.
+#define ENABLE_DEBUG 1
+
 #if ENABLE_DEBUG
   #define logger std::cout << "LOG:" << __FILE__ << ":" << __LINE__ << " \t :: \t "
 #else
@@ -12,7 +15,6 @@
 
 static constexpr size_t num_dimensions = flecsi::sp::pic_config_t::num_dimensions;
 using dim_array_t = std::array<real_t,num_dimensions>;
-//using a = flesci::sp::dim_array_t;
 
 ////// HELPER METHODS //////
 //

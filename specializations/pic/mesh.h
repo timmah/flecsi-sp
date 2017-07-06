@@ -224,16 +224,14 @@ namespace flecsi {
              } // cells
              */
 
-
-
-
           // Have the index space map from particle_array_index to the index space
           using simple_t = topology::simple_entry<size_t>;
-          // TODO: Make this private
-          topology::index_space<simple_t, false, true, false> particles_is;  
 
           void init();
+
         private:
+
+          topology::index_space<simple_t, false, true, false> particles_is;
 
           ///
           // Predicate function to create index space for accessing
@@ -353,7 +351,7 @@ namespace flecsi {
           boundary_cells_ =
             base_t::entities<dimension, 0>().filter(is_domain_boundary<cell_t>);
 
-          // TODO: Check these indicies
+          // TODO: Check these indices
           interior_vertices_ =
             base_t::entities<0, 0>().filter(is_interior<vertex_t>);
 

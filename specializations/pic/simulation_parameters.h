@@ -1,7 +1,6 @@
 #ifndef flecsi_sp_pic_simulation_paramaters_h
 #define flecsi_sp_pic_simulation_paramaters_h
 
-// TODO: Document this
 // This class could capture all of the "required" (or "assumed") fields needed
 // for a PIC simulation using this specialization.
 // Users of this specialization could then subclass this class (or even the
@@ -24,33 +23,20 @@ namespace flecsi {
                 // TODO: Setters and getters
                 public:
 
-                    //Ben preferred way of doing singleton
                     static Parameters_& instance()
                     {
                         static Parameters_ instance_;
                         return instance_;
                     }
 
-                    /*
-                    // Design patterns book way (favoring lazy initialization)
-                    static Parameters_* instance_;
+                    // NOTE: It would be nice to standardize the units used here
 
-                    static Parameters_& instance()
-                    {
-                        // TODO: move this init out to a function?
-                        if (!instance_)
-                        {
-                            instance_ = new Parameters_;
-                        }
-                        return instance_;
-                    }
-                    */
-
-                    // Consts
+                    // Define Consts
                     const real_t mu = 4.0 * M_PI * 1.0e-7; // permeability of free space
                     const real_t c = 299792458; // Speed of light
                     const real_t eps = 1.0 / (c * c * mu); // permittivity of free space
 
+                    // Other Params
                     size_t num_species = 0;
 
                     size_t NX_global = 64;
@@ -63,7 +49,7 @@ namespace flecsi {
 
                     size_t NPPC = 32;
 
-                    double dt = 0.1; // TODO: units?
+                    double dt = 0.1;
                     int num_steps = 10;
 
                     real_t len_x_global = 1.0;
@@ -87,18 +73,8 @@ namespace flecsi {
                     real_t dy = len_y/ny;
                     real_t dz = len_z/nz;
             };
-
-            //int Parameters_::instance2() { }
-
         } // namespace pic
     } // namespace sp
 } // namespace flecsi
-
-/*
-flecsi::sp::pic::Parameters_<> flecsi::sp::pic::Parameters_<>::instance2()
-{
-    return instance_;
-}
-*/
 
 #endif // flecsi_sp_pic_simulation_paramaters_h

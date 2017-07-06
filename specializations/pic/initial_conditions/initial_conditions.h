@@ -143,6 +143,7 @@ namespace flecsi {
                                 // Negative
                                 if (sp.initial_velocity[0] == -1)
                                 {
+                                    // TODO: Generalize out this 1/3 math
                                     // Try and place in the top third row
                                     cell_min = ( depth / 3.0) * width * height;
                                     cell_max = cell_min+(width*height);
@@ -164,7 +165,6 @@ namespace flecsi {
 
                                 if (proccess_this_cell)
                                 {
-
                                     // Place random coordinates
                                     real_t min_x = coords[0] * Parameters::instance().dx;
                                     real_t max_x = min_x + Parameters::instance().dx;

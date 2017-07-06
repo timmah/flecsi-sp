@@ -40,20 +40,19 @@ namespace flecsi {
 
                             // TODO: Is there a way abstract this loop structure with the current particle structure
                             // TODO: this may need to be "active ppc" or similar
-                            //
+
                             // Only iterate over used blocks
                             for (size_t i = 0; i < cell_particles.block_number+1; i++)
                             {
-
                                 for (size_t v = 0; v < PARTICLE_BLOCK_SIZE; v++)
                                 {
-                                    // TODO: Does this need masking for the empty unfilled blocks
-
                                     real_t x = cell_particles.get_x(i, v);
                                     real_t y = cell_particles.get_y(i, v);
                                     real_t z = cell_particles.get_z(i, v);
 
-                                    // TODO: Find a better way to filter particles out, USE MASK
+                                    // TODO: Find a better way to filter
+                                    // particles out, USE MASK? (both here and
+                                    // below)
                                     if (x == 0 && y == 0 && z == 0) continue;
 
                                     vis_file << x << " " << y << " " << z << std::endl;
@@ -116,7 +115,6 @@ namespace flecsi {
 
                                     real_t w = cell_particles.get_w(i, v);
 
-                                    // TODO: Find a better way to filter particles out, USE MASK
                                     if (x == 0 && y == 0 && z == 0) continue;
 
                                     vis_file << w << std::endl;
@@ -138,7 +136,6 @@ namespace flecsi {
                                     real_t y = cell_particles.get_y(i, v);
                                     real_t z = cell_particles.get_z(i, v);
 
-                                    // TODO: Find a better way to filter particles out, USE MASK
                                     if (x == 0 && y == 0 && z == 0) continue;
 
                                     vis_file << sn << std::endl;

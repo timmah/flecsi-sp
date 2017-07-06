@@ -37,7 +37,6 @@ protected:
     for(size_t k(0); k<N+1; ++k) {
       for(size_t j(0); j<N+1; ++j) {
         for(size_t i(0); i<N+1; ++i) {
-          // TODO: Check this logic
           bool is_domain_boundary = i==0 || j==0 || i==(N-1) || j==(N-1) || 
             k == 0 || k == (N-1); 
           vs.push_back(

@@ -11,14 +11,7 @@ namespace flecsi {
             template <class real_t> class particle_
             {
                 public:
-                    /*
-                    particle_() {}
-                    particle_(const particle_& p) {
-                        std::cout << "particle copy constructor" << std::endl;
-                    }
-                    ~particle_() { }
-                    */
-
+                    // TODO: Need to attribute_aligned on each array
                     real_t  dx[PARTICLE_BLOCK_SIZE];
                     real_t  dy[PARTICLE_BLOCK_SIZE];
                     real_t  dz[PARTICLE_BLOCK_SIZE];
@@ -28,7 +21,6 @@ namespace flecsi {
                     real_t uz[PARTICLE_BLOCK_SIZE];
                     real_t  w[PARTICLE_BLOCK_SIZE];
                     int32_t count = 0;
-                    //TODO: Need to attribute_aligned on each array
             };
 
 
@@ -41,50 +33,6 @@ namespace flecsi {
                     static const size_t num_blocks = 4;
 
                     particle_t block[num_blocks];
-
-                    // We don't want to do anything with complex object types
-                    /*
-                    particle_list_()
-                    {
-                        std::cout << "Default Constructor " << num_blocks << std::endl;
-                    }
-
-                    particle_list_(int num_blocks)
-                    {
-                        block = new particle_t[num_blocks];
-                        std::cout << "Constructor " << num_blocks << std::endl;
-                        this->num_blocks = num_blocks;
-                    }
-                    //  TODO: Add destructor
-                    ~particle_list_()
-                    {
-                        //delete block;
-                        std::cout << "Destructor" << std::endl;
-                    }
-
-                    // Copy consturctor
-                    particle_list_(const particle_list_& c)
-                    {
-                        // TODO: Think about correct way to implement this copy Constructor
-                        std::cout << "Copy Constructor" << std::endl;
-                        block = new particle_t[c.num_blocks];
-                        for (int i = 0; i < num_blocks; i++)
-                        {
-                            block[i] = c.block[i];
-                        }
-
-                        block_number = c.block_number;
-                        num_blocks = c.num_blocks;
-                    }
-
-                    // Assignment contructor
-                    particle_list_& operator= (const particle_list_& p)
-                    {
-                        std::cout << "Assignment Constructor" << std::endl;
-                    }
-
-                    */
-                    // TODO: This probably shouldn't be here
 
                     /// General Methods
                     void add_particle(

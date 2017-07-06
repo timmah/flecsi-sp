@@ -16,10 +16,9 @@
 //
 ///////////////////////////// END TODO //////////////////////////////////
 
-// Next steps (once key todos are done):
-// Add an automate-able validation
-// Input deck?
-
+// Next steps:
+  // Add an automate-able validation
+  // Input deck?
 
 /////////// PARTICLES //////////////
 //
@@ -31,9 +30,6 @@
 
 #ifndef pic_driver_h
 #define pic_driver_h
-
-// Currently this should be above helpers.h, but at some point should be cmake'd
-#define ENABLE_DEBUG 1
 
 // TODO: Remove this
   // I've included this as a terrible hack around the current build state of
@@ -89,14 +85,12 @@ enum Species_Keys {
 // proper particle support..
 auto get_particle_accessor(flecsi::sp::pic::mesh_t& m, size_t species_key)
 {
-  // TODO: These 0's would only be valid if they were always the same length. change it (to different domain?)
+  // TODO: The particles need to be registered to different domains
   if (species_key == Species_Keys::ELECTRON)
   {
-    std::cout << "Selecting Electron" << std::endl;
     return get_accessor(m, particles, p, particle_list_t, dense, 0);
   }
   else {
-    std::cout << "Selecting Negative" << std::endl;
     return get_accessor(m, negative_particles, p, particle_list_t, dense, 0);
   }
 }
@@ -341,7 +335,7 @@ void insert_particle(mesh_t& m, species_t& sp, auto particles_accesor, real_t x,
 void particle_initialization(mesh_t& m)
 {
 
-  // TODO: We would probably want to initialize srand at some point..
+  // We would probably want to initialize srand at some point..
   //srand((unsigned)time(0));
 
   size_t NPPC = Parameters::instance().NPPC;
@@ -356,45 +350,10 @@ void particle_initialization(mesh_t& m)
 
     auto particles_accesor = get_particle_accessor(m, sp.key);
 
-    /*
-    for ( auto c : m.cells() )
-    {
-      auto& cell_particles = particles_accesor[c];
-      auto v = m.vertices(c)[0];
-      auto coords = v->coordinates();
-      size_t cell_id = coords_to_1d( coords, width, depth);
-      */
+    initial_conditions->process_species(m, sp);
 
-      initial_conditions->process_species(
-          m,
-          sp
-      );
-
-      /*
-      auto v = m.vertices(c)[0]; // Try and grab the bottom corner of this cell
-      auto coord = v->coordinates();
-
-      real_t x_min = coord[0] * dx;
-      real_t x_max = x_min + dx;
-
-      real_t y_min = coord[1] * dy;
-      real_t y_max = y_min + dy;
-
-      real_t z_min = coord[2] * dz;
-      real_t z_max = z_min + dz;
-
-      for (size_t i = 0; i < NPPC; i++)
-      {
-        real_t x = random_real( x_min, x_max );
-        real_t y = random_real( y_min, y_max );
-        real_t z = random_real( z_min, z_max );
-
-        insert_particle(m, sp, particles_accesor, x, y, z, c);
-      }
-      */
-    //}
-    logger << "Done particle init. Species now has " << sp.num_particles << " particles." << std::endl;
-
+    logger << "Done particle init. Species now has " << sp.num_particles <<
+      " particles." << std::endl;
   }
 }
 
@@ -870,7 +829,6 @@ void particle_push(mesh_t& mesh)
   for (auto sp : species)
   {
     auto particles_accesor = get_particle_accessor(mesh, sp.key);
-    std::cout << "particles_accesor " << particles_accesor[mesh.cells()[1000]].get_ux(0,0) << std::endl;
 
     particle_timer->start();
 
