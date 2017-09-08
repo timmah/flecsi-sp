@@ -98,49 +98,52 @@ struct burton_types_t<2> {
   template<size_t D>
   using domain_ = flecsi::topology::domain_<D>;
 
+  template<size_t M>
+  using index_space_ = flecsi::topology::index_space_<M>;
+
   //! Definitions of burton mesh entities and their domain.
   using entity_types =
       std::tuple<
-        std::pair<domain_<0>, vertex_t>,
-        std::pair<domain_<0>, edge_t>,
-        std::pair<domain_<0>, cell_t>,
-        std::pair<domain_<1>, wedge_t>,
-        std::pair<domain_<1>, corner_t>
+        std::tuple<index_space_<0>, domain_<0>, vertex_t>,
+        std::tuple<index_space_<1>, domain_<0>, edge_t  >,
+        std::tuple<index_space_<2>, domain_<0>, cell_t  >,
+        std::tuple<index_space_<3>, domain_<1>, wedge_t >,
+        std::tuple<index_space_<4>, domain_<1>, corner_t>
       >;
 
   //! Connectivities are adjacencies of entities within a single domain.
   using connectivities =
     std::tuple<
-      std::tuple<domain_<0>, vertex_t, edge_t>,
-      std::tuple<domain_<0>, vertex_t, cell_t>,
-      std::tuple<domain_<0>, edge_t, vertex_t>,
+      std::tuple<index_space_<5>, domain_<0>, vertex_t, edge_t>,
+      std::tuple<index_space_<6>, domain_<0>, vertex_t, cell_t>,
+      std::tuple<index_space_<7>, domain_<0>, edge_t, vertex_t>,
       // edges->edges makes sure edges(faces) works in 2d
       // std::tuple<domain_<0>, edge_t, edge_t>,
-      std::tuple<domain_<0>, edge_t, cell_t>,
-      std::tuple<domain_<0>, cell_t, vertex_t>,
-      std::tuple<domain_<0>, cell_t, edge_t>
+      std::tuple<index_space_<8>, domain_<0>, edge_t, cell_t>,
+      std::tuple<index_space_<9>, domain_<0>, cell_t, vertex_t>,
+      std::tuple<index_space_<10>, domain_<0>, cell_t, edge_t>
       >;
 
   //! Bindings are adjacencies of entities across two domains.
   using bindings =
       std::tuple<
         // corners
-        std::tuple<domain_<0>, domain_<1>, cell_t,   corner_t>,
-        std::tuple<domain_<0>, domain_<1>, edge_t,   corner_t>,
-        std::tuple<domain_<0>, domain_<1>, vertex_t, corner_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t,   cell_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t,   edge_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t, vertex_t>,
+        std::tuple<index_space_<11>, domain_<0>, domain_<1>, cell_t,   corner_t>,
+        std::tuple<index_space_<12>, domain_<0>, domain_<1>, edge_t,   corner_t>,
+        std::tuple<index_space_<13>, domain_<0>, domain_<1>, vertex_t, corner_t>,
+        std::tuple<index_space_<14>, domain_<1>, domain_<0>, corner_t,   cell_t>,
+        std::tuple<index_space_<15>, domain_<1>, domain_<0>, corner_t,   edge_t>,
+        std::tuple<index_space_<16>, domain_<1>, domain_<0>, corner_t, vertex_t>,
         // wedges
-        std::tuple<domain_<0>, domain_<1>, cell_t,    wedge_t>,
-        std::tuple<domain_<0>, domain_<1>, edge_t,    wedge_t>,
-        std::tuple<domain_<0>, domain_<1>, vertex_t,  wedge_t>,
-        std::tuple<domain_<1>, domain_<0>, wedge_t,    cell_t>,
-        std::tuple<domain_<1>, domain_<0>, wedge_t,    edge_t>,
-        std::tuple<domain_<1>, domain_<0>, wedge_t,  vertex_t>,
+        std::tuple<index_space_<17>, domain_<0>, domain_<1>, cell_t,    wedge_t>,
+        std::tuple<index_space_<18>, domain_<0>, domain_<1>, edge_t,    wedge_t>,
+        std::tuple<index_space_<19>, domain_<0>, domain_<1>, vertex_t,  wedge_t>,
+        std::tuple<index_space_<20>, domain_<1>, domain_<0>, wedge_t,    cell_t>,
+        std::tuple<index_space_<21>, domain_<1>, domain_<0>, wedge_t,    edge_t>,
+        std::tuple<index_space_<22>, domain_<1>, domain_<0>, wedge_t,  vertex_t>,
         // corner <-> wedges
-        std::tuple<domain_<1>, domain_<1>,  wedge_t,  corner_t>,
-        std::tuple<domain_<1>, domain_<1>,  corner_t, wedge_t>
+        std::tuple<index_space_<23>, domain_<1>, domain_<1>,  wedge_t,  corner_t>,
+        std::tuple<index_space_<24>, domain_<1>, domain_<1>,  corner_t, wedge_t>
       >;
 
 
@@ -241,58 +244,61 @@ struct burton_types_t<3> {
   template<size_t D>
   using domain_ = flecsi::topology::domain_<D>;
 
+  template<size_t M>
+  using index_space_ = flecsi::topology::index_space_<M>;
+
   //! Definitions of burton mesh entities and their domain.
   using entity_types =
       std::tuple<
-        std::pair<domain_<0>, vertex_t>,
-        std::pair<domain_<0>, edge_t>,
-        std::pair<domain_<0>, face_t>,
-        std::pair<domain_<0>, cell_t>,
-        std::pair<domain_<1>, wedge_t>,
-        std::pair<domain_<1>, corner_t>
+        std::tuple<index_space_<0>, domain_<0>, vertex_t>,
+        std::tuple<index_space_<1>, domain_<0>, edge_t>,
+        std::tuple<index_space_<2>, domain_<0>, face_t>,
+        std::tuple<index_space_<3>, domain_<0>, cell_t>,
+        std::tuple<index_space_<4>, domain_<1>, wedge_t>,
+        std::tuple<index_space_<5>, domain_<1>, corner_t>
       >;
 
   //! Connectivities are adjacencies of entities within a single domain.
   using connectivities =
     std::tuple<
-      std::tuple<domain_<0>, vertex_t, edge_t>,
-      std::tuple<domain_<0>, vertex_t, face_t>,
-      std::tuple<domain_<0>, vertex_t, cell_t>,
-      std::tuple<domain_<0>, edge_t, vertex_t>,
-      std::tuple<domain_<0>, edge_t, face_t>,
-      std::tuple<domain_<0>, edge_t, cell_t>,
-      std::tuple<domain_<0>, face_t, vertex_t>,
-      std::tuple<domain_<0>, face_t, edge_t>,
-      std::tuple<domain_<0>, face_t, cell_t>,
-      std::tuple<domain_<0>, cell_t, vertex_t>,
-      std::tuple<domain_<0>, cell_t, face_t>,
-      std::tuple<domain_<0>, cell_t, edge_t>
+      std::tuple<index_space_<6>, domain_<0>, vertex_t, edge_t>,
+      std::tuple<index_space_<7>, domain_<0>, vertex_t, face_t>,
+      std::tuple<index_space_<8>, domain_<0>, vertex_t, cell_t>,
+      std::tuple<index_space_<9>, domain_<0>, edge_t, vertex_t>,
+      std::tuple<index_space_<10>, domain_<0>, edge_t, face_t>,
+      std::tuple<index_space_<11>, domain_<0>, edge_t, cell_t>,
+      std::tuple<index_space_<12>, domain_<0>, face_t, vertex_t>,
+      std::tuple<index_space_<13>, domain_<0>, face_t, edge_t>,
+      std::tuple<index_space_<14>, domain_<0>, face_t, cell_t>,
+      std::tuple<index_space_<15>, domain_<0>, cell_t, vertex_t>,
+      std::tuple<index_space_<16>, domain_<0>, cell_t, face_t>,
+      std::tuple<index_space_<17>, domain_<0>, cell_t, edge_t>
       >;
 
   //! Bindings are adjacencies of entities across two domains.
   using bindings =
       std::tuple<
         // corners
-        std::tuple<domain_<0>, domain_<1>,   cell_t, corner_t>,
-        std::tuple<domain_<0>, domain_<1>,   face_t, corner_t>,
-        std::tuple<domain_<0>, domain_<1>,   edge_t, corner_t>,
-        std::tuple<domain_<0>, domain_<1>, vertex_t, corner_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t,   cell_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t,   face_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t,   edge_t>,
-        std::tuple<domain_<1>, domain_<0>, corner_t, vertex_t>,
+        std::tuple<index_space_<18>, domain_<0>, domain_<1>,   cell_t, corner_t>,
+        std::tuple<index_space_<19>, domain_<0>, domain_<1>,   face_t, corner_t>,
+        std::tuple<index_space_<20>, domain_<0>, domain_<1>,   edge_t, corner_t>,
+        std::tuple<index_space_<21>, domain_<0>, domain_<1>, vertex_t, corner_t>,
+        std::tuple<index_space_<22>, domain_<1>, domain_<0>, corner_t,   cell_t>,
+        std::tuple<index_space_<23>, domain_<1>, domain_<0>, corner_t,   face_t>,
+        std::tuple<index_space_<24>, domain_<1>, domain_<0>, corner_t,   edge_t>,
+        std::tuple<index_space_<25>, domain_<1>, domain_<0>, corner_t, vertex_t>,
         // wedges
-        std::tuple<domain_<0>, domain_<1>,   cell_t,  wedge_t>,
-        std::tuple<domain_<0>, domain_<1>,   face_t,  wedge_t>,
-        std::tuple<domain_<0>, domain_<1>,   edge_t,  wedge_t>,
-        std::tuple<domain_<0>, domain_<1>, vertex_t,  wedge_t>,
-        std::tuple<domain_<1>, domain_<0>,  wedge_t,   cell_t>,
-        std::tuple<domain_<1>, domain_<0>,  wedge_t,   face_t>,
-        std::tuple<domain_<1>, domain_<0>,  wedge_t,   edge_t>,
-        std::tuple<domain_<1>, domain_<0>,  wedge_t, vertex_t>,
+        std::tuple<index_space_<26>, domain_<0>, domain_<1>,   cell_t,  wedge_t>,
+        std::tuple<index_space_<27>, domain_<0>, domain_<1>,   face_t,  wedge_t>,
+        std::tuple<index_space_<28>, domain_<0>, domain_<1>,   edge_t,  wedge_t>,
+        std::tuple<index_space_<29>, domain_<0>, domain_<1>, vertex_t,  wedge_t>,
+        std::tuple<index_space_<30>, domain_<1>, domain_<0>,  wedge_t,   cell_t>,
+        std::tuple<index_space_<31>, domain_<1>, domain_<0>,  wedge_t,   face_t>,
+        std::tuple<index_space_<32>, domain_<1>, domain_<0>,  wedge_t,   edge_t>,
+        std::tuple<index_space_<33>, domain_<1>, domain_<0>,  wedge_t, vertex_t>,
         // corner <-> wedges
-        std::tuple<domain_<1>, domain_<1>,  wedge_t,  corner_t>,
-        std::tuple<domain_<1>, domain_<1>,  corner_t, wedge_t>
+        std::tuple<index_space_<34>, domain_<1>, domain_<1>,  wedge_t,  corner_t>,
+        std::tuple<index_space_<35>, domain_<1>, domain_<1>,  corner_t, wedge_t>
       >;
  
   //============================================================================
