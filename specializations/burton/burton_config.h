@@ -14,8 +14,9 @@
 #include "flecsi-sp/geometry/point.h"
 #include "flecsi-sp/math/vector.h"
 #include "flecsi-sp/utils/fixed_vector.h"
-#include "flecsi/utils/bitfield.h"
+//#include "flecsi/utils/bitfield.h"
 #include "flecsi/data/data.h"
+#include "flecsi/data/common/data_types.h"
 
 namespace flecsi {
 namespace sp {
@@ -41,7 +42,7 @@ struct burton_config_t {
   using const_string_t = flecsi::utils::const_string_t;
 
   //! the bitfield type
-  using bitfield_t = flecsi::utils::bitfield_t;
+  using bitfield_t = flecsi::data::bitset_t;
 
   //! A type used for loop indexing.
   using counter_t = long long;
