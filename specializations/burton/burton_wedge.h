@@ -50,7 +50,9 @@ public:
   //============================================================================
 
   //! the flecsi mesh topology type
-  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<burton_config_t<2>::num_dimensions,
+                                burton_config_t<2>::num_domains> >;
  
   //! the mesh traits
   using config_t = burton_config_t<2>;
@@ -175,7 +177,9 @@ public:
   //============================================================================
 
   //! the flecsi mesh topology type
-  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<burton_config_t<3>::num_dimensions,
+                                burton_config_t<3>::num_domains> >;
  
   //! the mesh traits
   using config_t = burton_config_t<3>;

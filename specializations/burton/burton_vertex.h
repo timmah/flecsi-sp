@@ -14,7 +14,7 @@
 #include "flecsi-sp/burton/burton_config.h"
 #include "flecsi-sp/utils/errors.h"
 #include "flecsi/topology/mesh_types.h"
-
+#include "flecsi/topology/mesh_storage.h"
 
 namespace flecsi {
 namespace sp {
@@ -45,7 +45,9 @@ public:
   //============================================================================
 
   //! the flecsi mesh topology type
-  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<burton_config_t<2>::num_dimensions, 
+                                burton_config_t<2>::num_domains> >;
  
   //! the mesh traits
   using config_t = burton_config_t<2>;
@@ -141,7 +143,7 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 template<>
 class burton_vertex_t<3> : 
-    public flecsi::topology::mesh_entity_t<0, burton_config_t<2>::num_domains>
+    public flecsi::topology::mesh_entity_t<0, burton_config_t<3>::num_domains>
 {
 public:
 
@@ -150,7 +152,9 @@ public:
   //============================================================================
 
   //! the flecsi mesh topology type
-  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<burton_config_t<3>::num_dimensions, 
+                                burton_config_t<3>::num_domains> >;
  
   //! the mesh traits
   using config_t = burton_config_t<3>;

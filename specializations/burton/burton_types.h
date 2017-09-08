@@ -61,7 +61,9 @@ struct burton_types_t<2> {
   static constexpr size_t num_domains = config_t::num_domains;
 
   //! the base type for the mesh topology
-  using mesh_topology_base_t = flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<config_t::num_dimensions,
+                                config_t::num_domains> >;
 
   // the base type for the entities
   using mesh_entity_base_t = flecsi::topology::mesh_entity_base_t<num_domains>;
@@ -202,7 +204,9 @@ struct burton_types_t<3> {
   static constexpr size_t num_domains = config_t::num_domains;
 
   //! the base type for the mesh topology
-  using mesh_topology_base_t = flecsi::topology::mesh_topology_base_t;
+  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t<flecsi::topology::
+                                mesh_storage_t<config_t::num_dimensions,
+                                config_t::num_domains> >;
   
   // the base type for the entities
   using mesh_entity_base_t = flecsi::topology::mesh_entity_base_t<num_domains>;
