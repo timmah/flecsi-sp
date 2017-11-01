@@ -206,5 +206,5 @@ private:
 
 } // namespace shapes
 } // namespace geom
-} // namespace ale
-} // namespace ale
+} // namespace sp
+} // namespace flecsi

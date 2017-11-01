@@ -731,5 +731,5 @@ public:
 
 } // namspeace shapes
 } // namespace geom
-} // namespace ale
-} // namespace ale
+} // namespace sp
+} // namespace flecsi

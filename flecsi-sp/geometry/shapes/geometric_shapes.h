@@ -19,6 +19,7 @@ namespace shapes {
 //////////////////////////////////////////////////////////////////////////////
 enum class geometric_shapes_t 
 {
+  none,
   triangle,
   quadrilateral,
   polygon,
@@ -30,5 +31,5 @@ enum class geometric_shapes_t
 
 } // namespace shapes
 } // namespace geom
-} // namespace ale
-} // namespace ale
+} // namespace sp
+} // namespace flecsi
