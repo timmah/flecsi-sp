@@ -5,7 +5,6 @@
 
 set(common_HEADERS
   types.h
-  PARENT_SCOPE
 )
 
 set(common_SOURCES

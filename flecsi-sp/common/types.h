@@ -12,6 +12,7 @@
 #pragma once
 
 // system includes
+#include <cstddef> // for size_t
 #include <cstdint> // for types
 
 namespace flecsi {
@@ -50,9 +51,6 @@ using std::size_t;
 
 //! a counter type
 using counter_t = long long;
-
-//! the test tolerance 
-static constexpr real_t test_tolerance = TEST_TOLERANCE;
 
 } // namespace
 } // namespace
