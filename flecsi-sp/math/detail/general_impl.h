@@ -53,5 +53,5 @@ constexpr void average( T & res, U && u, Args&&... args )
 
 } // namespace detail
 } // namespace math
-} // namespace ale
-} // namespace ale
+} // namespace sp
+} // namespace flecsi

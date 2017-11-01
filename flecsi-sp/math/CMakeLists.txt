@@ -9,6 +9,7 @@ set(math_HEADERS
   general.h  detail/general_impl.h
   matrix.h
   multi_array.h
+  tuple.h
   vector.h
   PARENT_SCOPE
 )
