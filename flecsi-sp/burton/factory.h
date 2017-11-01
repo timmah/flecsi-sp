@@ -65,7 +65,7 @@ box( typename T::size_t num_cells_x, typename T::size_t num_cells_y,
     auto y = min_y + j*delta_y;
     for(counter_t i = 0; i < num_vert_x; ++i) {
       auto x = min_x + i*delta_x;
-      auto v = mesh.create_vertex( {x, y} );
+      auto v = mesh.create_vertex( x, y );
       vs.emplace_back( std::move(v) );
     }
     
@@ -140,7 +140,7 @@ box( typename T::size_t num_cells_x, typename T::size_t num_cells_y, typename T:
       auto y = min_y + j*delta_y;
       for(counter_t i = 0; i < num_vert_x; ++i) {
         auto x = min_x + i*delta_x;
-        auto v = mesh.create_vertex( {x, y, z} );
+        auto v = mesh.create_vertex( x, y, z );
         vs.emplace_back( std::move(v) );
       }     
     }
@@ -254,6 +254,6 @@ void rotate( T & mesh, typename T::real_t degrees )
 
 }
 
-} // namespace mesh
-} // namespace ale
-} // namespace ale
+} // namespace burton
+} // namespace sp
+} // namespace flecsi

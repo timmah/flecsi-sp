@@ -63,7 +63,7 @@ T voronoi(
 
 
   // the tesselator
-  using shapo::Tessellator;
+  using Tessellator = shapo::Tessellator2D;
 
   //----------------------------------------------------------------------------
   // shapo setup
@@ -148,6 +148,6 @@ T voronoi(
 
 } // voronoi
 
-} // namespace mesh
-} // namespace ale
-} // namespace ale
+} // namespace burton
+} // namespace sp
+} // namespace flecsi
