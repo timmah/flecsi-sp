@@ -4,16 +4,19 @@
 #~----------------------------------------------------------------------------~#
 
 set(io_HEADERS
-  vtk.h
+  io_exodus.h
   write_binary.h
-  PARENT_SCOPE
+  vtk.h
 )
 
 set(io_SOURCES
   vtk.cc
-  PARENT_SCOPE
 )
 
+cinch_install_headers(
+  FILES ${io_HEADERS}
+  DESTINATION include/flecsi-sp/io
+)
 
 #----------------------------------------------------------------------------~-#
 # Formatting options for vim.
