@@ -13,6 +13,11 @@
 // user includes
 #include "burton_io_test.h"
 
+// register data
+flecsi_register_data(mesh, io_test, pressure, real_t, dense, 1, cells);
+flecsi_register_data(mesh, io_test, region, integer_t, dense, 1, cells);
+flecsi_register_data(mesh, io_test, velocity, vector_t, dense, 1, vertices);
+
 
 // Below tests need exodus to read the file
 #ifdef HAVE_EXODUS 

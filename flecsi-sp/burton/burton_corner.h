@@ -18,12 +18,6 @@ namespace flecsi {
 namespace sp {
 namespace burton {
 
-
-
-//! forward decares
-template< std::size_t N >
-class burton_wedge_t;
-
 ////////////////////////////////////////////////////////////////////////////////
 //! \brief The burton_corner_t type provides an interface for managing and
 //!   geometry and state associated with mesh corners.
@@ -40,9 +34,6 @@ public:
   // Typedefs
   //============================================================================
 
-  //! the flecsi mesh topology type
-  using mesh_topology_base_t =  flecsi::topology::mesh_topology_base_t;
- 
   //! the mesh traits
   using config_t = burton_config_t<N>;
 
@@ -55,33 +46,19 @@ public:
   //! The domain of the entity
   static constexpr auto domain = 1;
 
-  //! Type of floating point.
-  using real_t = typename config_t::real_t;
-
-  //! Type containing coordinates of a vertex.
-  using point_t = typename config_t::point_t;
-
-  //! Type vector type.
-  using vector_t = typename config_t::vector_t;
-
-  //! the base vertex type
-  using vertex_t = burton_vertex_t<num_dimensions>;
-
-  //! the base edge type
-  using edge_t = burton_edge_t<num_dimensions>;
-
-  //! the base edge type
-  using face_t = burton_face_t<num_dimensions>;
-
-  //! the base cell type
-  using cell_t = burton_cell_t<num_dimensions>;
+  //! the flecsi mesh topology storage type
+  using mesh_storage_t = 
+    flecsi::topology::mesh_storage_t<num_dimensions, num_domains>;
+  //! the flecsi mesh topology type
+  using mesh_topology_base_t = 
+    flecsi::topology::mesh_topology_base_t< mesh_storage_t >;
 
   //============================================================================
   // Constructors
   //============================================================================
 
   //! default constructor
-  burton_corner_t(mesh_topology_base_t & mesh) {};
+  burton_corner_t() = default;
 
   // dissallow copying
   burton_corner_t( burton_corner_t & ) = delete;
@@ -91,16 +68,9 @@ public:
   burton_corner_t( burton_corner_t && ) = delete;
   burton_corner_t & operator=( burton_corner_t && ) = delete;
 
-  //============================================================================
-  // Accessors / Modifiers
-  //============================================================================
-
-  //! \brief reset the mesh pointer
-  void reset(mesh_topology_base_t & mesh) { }
-
 
 };
 
-} // namespace mesh
-} // namespace ale
-} // namespace ale
+} // namespace burton
+} // namespace sp
+} // namespace flecsi
