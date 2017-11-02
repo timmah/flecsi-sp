@@ -12,6 +12,10 @@
 
 #include "flecsi-sp/math/vector.h"
 
+#include <flecsi/utils/common.h>
+
+#include <cmath>
+
 namespace flecsi{
 namespace sp {
 namespace geometry{
@@ -27,6 +31,20 @@ namespace geometry{
 template <typename T, std::size_t D> 
 using point = math::vector<T,D>;
 
+
+///
+// \function distance
+///
+template <typename T, size_t D>
+T distance(const point<T, D> & a, const point<T, D> & b)
+{
+  T sum(0);
+  for (size_t d(0); d < D; ++d) {
+    sum += flecsi::utils::square(a[d] - b[d]);
+  } // for
+
+  return std::sqrt(sum);
+} // distance
   
 } // namespace geometry
 } // namespace sp
