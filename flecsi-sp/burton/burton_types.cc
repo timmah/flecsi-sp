@@ -1,5 +1,5 @@
 // user includes
-#include "flecsale/mesh/burton/burton_types.h"
+#include "flecsi-sp/burton/burton_types.h"
 
 namespace flecsi {
 namespace sp {

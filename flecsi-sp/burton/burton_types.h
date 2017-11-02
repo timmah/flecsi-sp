@@ -535,4 +535,3 @@ struct burton_types_t<3, false> : public burton_3d_types_base
 } // namespace burton
 } // namespace sp
 } // namespace flecsi
-} // namespace ale

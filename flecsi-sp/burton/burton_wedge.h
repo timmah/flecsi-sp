@@ -194,12 +194,12 @@ void burton_wedge_t<3>::update(const  MESH_TOPOLOGY* mesh, bool is_right)
   auto v = vs.front()->coordinates();
   auto f = fs.front()->midpoint();
   if ( is_right )
-    facet_normal_ = geom::shapes::triangle<num_dimensions>::normal( v, f, e );
+    facet_normal_ = geometry::shapes::triangle<num_dimensions>::normal( v, f, e );
   else 
-    facet_normal_ = geom::shapes::triangle<num_dimensions>::normal( v, e, f );
+    facet_normal_ = geometry::shapes::triangle<num_dimensions>::normal( v, e, f );
   facet_area_ = abs(facet_normal_);
   facet_normal_ /= facet_area_;
-  facet_centroid_ = geom::shapes::triangle<num_dimensions>::centroid( v, f, e );
+  facet_centroid_ = geometry::shapes::triangle<num_dimensions>::centroid( v, f, e );
   set_boundary( fs.front()->is_boundary() );
 }
 

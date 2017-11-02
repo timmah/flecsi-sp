@@ -28,40 +28,4 @@ set(utils_HEADERS
   PARENT_SCOPE
 )
 
-cinch_add_unit(test_utils
-    SOURCES 
-      test/array_view.cc
-      test/caliper.cc
-      test/fixed_vector.cc
-      test/lua_utils.cc
-      test/python_utils.cc
-      test/static_for.cc
-      test/tasks.cc
-      test/tuple_for_each.cc
-      test/tuple_visit.cc
-      test/tuple_zip.cc
-      test/zip.cc
-    INPUTS 
-      test/lua_test.lua
-      test/python_test.py
-    PARENT_SCOPE
-)
 
-# make sure the test was actually made
-if (TARGET test_utils)
-  
-  # now link the necessary libraries
-  if (PYTHON_LIBRARIES) 
-    target_link_libraries(test_utils ${PYTHON_LIBRARIES})
-  endif()
-  if (LUA_LIBRARIES) 
-    target_link_libraries(test_utils ${LUA_LIBRARIES})
-  endif()
-  if (Caliper_LIBRARIES) 
-    target_link_libraries(test_utils ${Caliper_LIBRARIES})
-  endif()
-
-#----------------------------------------------------------------------------~-#
-# Formatting options for vim.
-# vim: set tabstop=2 shiftwidth=2 expandtab :
-#----------------------------------------------------------------------------~-#

@@ -602,9 +602,9 @@ struct burton_element_t<2,2>
         const auto & a = vs[0]->coordinates();
         const auto & b = vs[1]->coordinates();
         const auto & c = vs[2]->coordinates();
-        centroid_ = geom::shapes::triangle<num_dimensions>::centroid( a, b, c );
-        midpoint_ = geom::shapes::triangle<num_dimensions>::midpoint( a, b, c );
-        area_ = geom::shapes::triangle<num_dimensions>::area( a, b, c );
+        centroid_ = geometry::shapes::triangle<num_dimensions>::centroid( a, b, c );
+        midpoint_ = geometry::shapes::triangle<num_dimensions>::midpoint( a, b, c );
+        area_ = geometry::shapes::triangle<num_dimensions>::area( a, b, c );
         // check the edges first
         min_length_ = abs( a - b );
         min_length_ = std::min( abs( b - c ), min_length_ );
@@ -619,11 +619,11 @@ struct burton_element_t<2,2>
         const auto & c = vs[2]->coordinates();
         const auto & d = vs[3]->coordinates();
         centroid_ = 
-          geom::shapes::quadrilateral<num_dimensions>::centroid( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::centroid( a, b, c, d );
         midpoint_ = 
-          geom::shapes::quadrilateral<num_dimensions>::midpoint( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::midpoint( a, b, c, d );
         area_ = 
-          geom::shapes::quadrilateral<num_dimensions>::area( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::area( a, b, c, d );
         // check the edges first
         min_length_ = abs( a - b );
         min_length_ = std::min( abs( b - c ), min_length_ );
@@ -638,9 +638,9 @@ struct burton_element_t<2,2>
       // the element is a polygon
       case shape_t::polygon: {
         auto coords = detail::coordinates(mesh, this);
-        centroid_ = geom::shapes::polygon<num_dimensions>::centroid( coords );
-        midpoint_ = geom::shapes::polygon<num_dimensions>::midpoint( coords );
-        area_ = geom::shapes::polygon<num_dimensions>::area( coords );
+        centroid_ = geometry::shapes::polygon<num_dimensions>::centroid( coords );
+        midpoint_ = geometry::shapes::polygon<num_dimensions>::midpoint( coords );
+        area_ = geometry::shapes::polygon<num_dimensions>::area( coords );
         // now check min edge length
         auto vs = mesh->template entities<0, domain>(this);
         min_length_ = detail::min_length( vs );
@@ -886,9 +886,9 @@ struct burton_element_t<3,2>
         const auto & a = vs[0]->coordinates();
         const auto & b = vs[1]->coordinates();
         const auto & c = vs[2]->coordinates();
-        centroid_ = geom::shapes::triangle<num_dimensions>::centroid( a, b, c );
-        midpoint_ = geom::shapes::triangle<num_dimensions>::midpoint( a, b, c );
-        normal_ = geom::shapes::triangle<num_dimensions>::normal( a, b, c );
+        centroid_ = geometry::shapes::triangle<num_dimensions>::centroid( a, b, c );
+        midpoint_ = geometry::shapes::triangle<num_dimensions>::midpoint( a, b, c );
+        normal_ = geometry::shapes::triangle<num_dimensions>::normal( a, b, c );
         // check the edges first
         min_length_ = abs( a - b );
         min_length_ = std::min( abs( b - c ), min_length_ );
@@ -903,11 +903,11 @@ struct burton_element_t<3,2>
         const auto & c = vs[2]->coordinates();
         const auto & d = vs[3]->coordinates();
         centroid_ = 
-          geom::shapes::quadrilateral<num_dimensions>::centroid( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::centroid( a, b, c, d );
         midpoint_ = 
-          geom::shapes::quadrilateral<num_dimensions>::midpoint( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::midpoint( a, b, c, d );
         normal_ = 
-          geom::shapes::quadrilateral<num_dimensions>::normal( a, b, c, d );
+          geometry::shapes::quadrilateral<num_dimensions>::normal( a, b, c, d );
         // check the edges first
         min_length_ = abs( a - b );
         min_length_ = std::min( abs( b - c ), min_length_ );
@@ -922,9 +922,9 @@ struct burton_element_t<3,2>
       // the element is a polygon
       case shape_t::polygon: {
         auto coords = coordinates( mesh );
-        centroid_ = geom::shapes::polygon<num_dimensions>::centroid( coords );
-        midpoint_ = geom::shapes::polygon<num_dimensions>::midpoint( coords );
-        normal_ = geom::shapes::polygon<num_dimensions>::normal( coords );
+        centroid_ = geometry::shapes::polygon<num_dimensions>::centroid( coords );
+        midpoint_ = geometry::shapes::polygon<num_dimensions>::midpoint( coords );
+        normal_ = geometry::shapes::polygon<num_dimensions>::normal( coords );
         min_length_ = detail::min_length( vs );
         break;
       }
@@ -1397,11 +1397,11 @@ struct burton_element_t<3,3>
         const auto & v2 = vs[2]->coordinates();
         const auto & v3 = vs[3]->coordinates();
         centroid_ = 
-          geom::shapes::tetrahedron::centroid( v0, v1, v2, v3 );
+          geometry::shapes::tetrahedron::centroid( v0, v1, v2, v3 );
         midpoint_ = 
-          geom::shapes::tetrahedron::midpoint( v0, v1, v2, v3 );
+          geometry::shapes::tetrahedron::midpoint( v0, v1, v2, v3 );
         volume_ = 
-          geom::shapes::tetrahedron::volume( v0, v1, v2, v3 );
+          geometry::shapes::tetrahedron::volume( v0, v1, v2, v3 );
         min_length_ = detail::min_length( vs );
         break;
       }
@@ -1417,18 +1417,18 @@ struct burton_element_t<3,3>
         const auto & v6 = vs[6]->coordinates();
         const auto & v7 = vs[7]->coordinates();
         centroid_ = 
-          geom::shapes::hexahedron::centroid( v0, v1, v2, v3, v4, v5, v6, v7 );
+          geometry::shapes::hexahedron::centroid( v0, v1, v2, v3, v4, v5, v6, v7 );
         midpoint_ = 
-          geom::shapes::hexahedron::midpoint( v0, v1, v2, v3, v4, v5, v6, v7 );
+          geometry::shapes::hexahedron::midpoint( v0, v1, v2, v3, v4, v5, v6, v7 );
         volume_ = 
-          geom::shapes::hexahedron::volume( v0, v1, v2, v3, v4, v5, v6, v7 );
+          geometry::shapes::hexahedron::volume( v0, v1, v2, v3, v4, v5, v6, v7 );
         min_length_ = detail::min_length( vs );
         break;
       }
   
       // the element is a polyhedron
       case shape_t::polyhedron: {
-        geom::shapes::polyhedron<point_t> poly;     
+        geometry::shapes::polyhedron<point_t> poly;     
         for ( auto f : fs ) {
           auto cs = mesh->template entities<3, domain>(f);
           auto reverse = (cs[0] != this); // FIXME: reverse

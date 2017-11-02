@@ -7,9 +7,6 @@ set(common_HEADERS
   types.h
 )
 
-set(common_SOURCES
-  PARENT_SCOPE
-)
 
 
 #----------------------------------------------------------------------------~-#
