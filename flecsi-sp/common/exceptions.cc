@@ -13,7 +13,8 @@
 #  include <fenv.h>
 #endif
 
-namespace apps {
+namespace flecsi {
+namespace sp     {
 namespace common {
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -28,5 +29,6 @@ void enable_exceptions(void) {
 
 }
 
+} // namespace
 } // namespace
 } // namespace

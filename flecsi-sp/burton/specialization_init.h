@@ -19,6 +19,10 @@
 #include "flecsi/execution/execution.h"
 #include "flecsi/io/exodus_definition.h"
 
+#include "flecsi-sp/common/utils.h"
+#include "flecsi-sp/common/exceptions.h"
+#include "flecsi-sp/utils/trivial_string.h"
+
 // system includes
 #include <iostream>
 
@@ -29,6 +33,8 @@ namespace burton {
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief the main cell coloring driver
 ////////////////////////////////////////////////////////////////////////////////
+using char_array_t = flecsi::sp::utils::trivial_string_t;
+
 void partition_mesh( char_array_t filename ) 
 {
   // set some compile time constants 
@@ -416,7 +422,7 @@ void initialize_mesh(
   exodus_definition_t mesh_def( filename_string );
 
   // fill the mesh
-  apps::common::create_cells( mesh_def, mesh );
+  flecsi::sp::common::create_cells( mesh_def, mesh );
  
   // initialize the mesh
   mesh.init(); 
@@ -431,7 +437,7 @@ void initialize_mesh(
   auto basename = utils::basename( filename_string );
   auto output_prefix = utils::remove_extension( basename );
   auto output_filename = output_prefix + "-connectivity_rank" +
-    apps::common::zero_padded(rank) + ".txt";
+      flecsi::sp::common::zero_padded(rank) + ".txt";
 
   // dump to file
   if ( rank == 0 )
@@ -460,7 +466,7 @@ int specialization_tlt_init(int argc, char ** argv)
   clog(info) << "In specialization top-level-task init" << std::endl;
   
   // set exceptions 
-  apps::common::enable_exceptions();
+  flecsi::sp::common::enable_exceptions();
   
   // get the color
   auto & context = flecsi::execution::context_t::instance();
@@ -537,5 +543,6 @@ int specialization_spmd_init(int argc, char ** argv)
 }
 
 
+} // namespace
 } // namespace
 } // namespace

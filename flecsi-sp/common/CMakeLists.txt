@@ -4,13 +4,17 @@
 #~----------------------------------------------------------------------------~#
 
 set(common_HEADERS
+  constants.h	
+  exceptions.h
+  parse_arguments.h
+  specialization_init.h  
   types.h
-  exception.h
+  utils.h
   PARENT_SCOPE
 )
 
 set(common_SOURCES
-  exception.cc
+  exceptions.cc
   PARENT_SCOPE
 )
 
