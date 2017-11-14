@@ -8,7 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-namespace flecsale {
+namespace flecsi {
+namespace sp    {
 namespace geom {
 namespace detail {
 
@@ -37,7 +38,7 @@ constexpr void area_2d( U & vol, V1 && v1, V2 && v2, Args&&... args )
            std::forward<Args>(args)... ); 
 }
 
-
+} // namespace
 } // namespace
 } // namespace
 } // namespace

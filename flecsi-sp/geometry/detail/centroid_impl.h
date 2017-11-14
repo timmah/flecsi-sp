@@ -8,7 +8,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 #pragma once
 
-namespace flecsale {
+namespace flecsi {
+namespace sp    {
 namespace geom {
 namespace detail {
 
@@ -41,7 +42,7 @@ constexpr void centroid_2d( T & cx, U & vol, V1 && v1, V2 && v2, Args&&... args 
                std::forward<Args>(args)... ); 
 }
 
-
+} // namespace
 } // namespace
 } // namespace
 } // namespace
