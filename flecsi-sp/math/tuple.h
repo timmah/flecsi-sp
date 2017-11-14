@@ -9,9 +9,9 @@
 #pragma once
 
 // user includes
-#include "flecsale/utils/tuple_for_each.h"
-#include "flecsale/utils/tuple_visit.h"
-#include "flecsale/utils/tuple_zip.h"
+#include "flecsi-sp/utils/tuple_for_each.h"
+#include "flecsi-sp/utils/tuple_visit.h"
+#include "flecsi-sp/utils/tuple_zip.h"
 
 // system includes
 #include <iostream>
