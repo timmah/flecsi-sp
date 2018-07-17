@@ -21,7 +21,7 @@ namespace execution {
 void specialization_tlt_init(int argc, char** argv)
 {
 #ifdef BURTON_ENABLE_APPLICATION_TLT_INIT
-  application_tlt_init(argc, argv);
+  flecsi_sp::burton::application_tlt_init(argc, argv);
 #endif // BURTON_ENABLE_APPLICATION_TLT_INIT
   clog(info) << "In specialization top-level-task init" << std::endl;
 
